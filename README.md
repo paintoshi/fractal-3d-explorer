@@ -58,11 +58,33 @@ Your world, camera position, flight speed, depth, render quality, repeating-spac
 
 ## Rendering technology
 
-Foldspace uses WebGL 2 to evaluate fractal distance estimates directly on the GPU. Ray marching reveals the surfaces without storing or streaming meshes. Lighting combines tetrahedral normal estimation, ambient occlusion, atmospheric fog, bloom, and FXAA antialiasing.
+Foldspace is a **GPU-first** realtime renderer. Almost all of the heavy work runs in WebGL 2 fragment shaders; the CPU handles the interface, camera, and a small number of helper calculations.
 
-**Automatic** quality adjusts resolution toward 30 fps. **Performance**, **High detail**, and **Ultra** let you choose the balance between speed and clarity. Frame rate depends on your GPU, the world, and how deeply you explore. Rendering pauses while the page is hidden or the controls guide is open.
+### What runs on the GPU
 
-Reusable rendering buffers keep graphics memory usage bounded during exploration. Repeating worlds also rebase the camera periodically to preserve coordinate precision over long flights.
+Each frame, a **scene shader** draws a full-screen triangle. For every pixel it:
+
+1. Casts a ray from the camera through that pixel.
+2. **Ray-marches** along the ray, repeatedly evaluating a **signed distance field** for the active fractal (Mandelbox, Menger, Mandelbulb, Blockworld, or Kleinian). No meshes are built or uploaded—the surface is found purely by math.
+3. On a hit, estimates **normals**, **ambient occlusion**, **soft shadows**, and **orbit-trap coloring**, then mixes in **fog** and sky.
+
+The same distance formulas exist in JavaScript for flight helpers (see below), but **what you see on screen is entirely shader-driven**. High-resolution **Render image** export uses the same GPU path, tiled into padded chunks; the CPU only stitches those tiles into a PNG.
+
+Additional GPU passes apply **bloom** (two separable blurs) and **FXAA** antialiasing. There is one compiled shader program per world, plus a heavier **deep-zoom** variant per world (except Mandelbulb) that uses paired-float arithmetic in the shader for extra precision near surfaces.
+
+**Automatic** quality scales internal resolution toward ~30 fps. **Performance**, **High detail**, and **Ultra** fix that tradeoff manually. Frame rate depends on your GPU, the world, fractal depth, and how close you are to geometry. Rendering pauses while the page is hidden or the controls guide is open.
+
+Reusable render targets keep GPU memory bounded. Repeating worlds periodically rebase the camera so coordinates stay stable over long flights.
+
+### What runs on the CPU
+
+The browser’s JavaScript thread does **not** paint the fractal pixel-by-pixel. It:
+
+- Reads input, updates camera position and orientation, and saves settings.
+- Runs a lightweight **`distance()`** mirror of each world’s formula in **64-bit float**—typically **once per frame at the camera position** (and a few related probes). That drives **flight slowdown near surfaces**, **adaptive iteration counts** passed into the shader as uniforms, and the **Surface distance** readout in the UI.
+- Compiles and links shaders at startup (and loads deep-zoom variants in the background). Compilation uses the CPU and driver; execution of the formulas uses the GPU.
+
+So: **visuals and export = GPU**; **controls, UI, and conservative flight math = CPU**.
 
 ### Deep exploration
 

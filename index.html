@@ -17,30 +17,32 @@ header{position:fixed;top:30px;left:32px;right:32px;display:flex;align-items:cen
 aside{position:fixed;top:119px;left:32px;width:262px;max-height:calc(100dvh - 240px);overflow:auto;background:var(--panel);backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:16px;padding:20px 14px 15px;scrollbar-width:thin}.panel-heading{display:flex;align-items:center;justify-content:space-between;padding:0 8px 14px;font-size:14px;font-weight:600}.panel-heading span{font-size:12px;color:var(--muted);font-weight:400}.world{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:12px 10px;border-color:transparent;margin:2px 0}.world[aria-pressed=true]{background:color-mix(in srgb,var(--accent) 8%,transparent);border-color:color-mix(in srgb,var(--accent) 32%,transparent)}.world strong{display:block;font-size:14px;font-weight:550}.world small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.world .mark{display:grid;place-items:center;width:38px;height:42px;color:var(--swatch);flex-shrink:0}.mark svg{width:34px;height:34px}.world .dot{width:5px;height:5px;margin-left:auto;border-radius:50%;background:transparent}.world[aria-pressed=true] .dot{background:var(--accent);box-shadow:0 0 10px var(--accent)}
 .settings{margin:18px 8px 0;padding-top:18px;border-top:1px solid var(--line)}.setting{margin:13px 0}.setting label{display:flex;justify-content:space-between;color:#cedee4;font-size:12px;margin-bottom:8px}.setting output{color:var(--muted)}input[type=range]{accent-color:var(--accent);height:4px;width:100%;display:block;margin:12px 0 17px;cursor:pointer}select{color:#dbe8ec;background:#11212d;border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;font-size:12px}.switch-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-top:15px}.switch-row input{accent-color:var(--accent);width:16px;height:16px}.panel-footer{display:flex;gap:8px;margin:18px 8px 0}.panel-footer button{padding:8px 10px;font-size:12px;flex:1;color:#c7dbe1}
 .scene-info{position:fixed;left:330px;bottom:40px;pointer-events:none;max-width:550px}.scene-info .eyebrow{display:flex;align-items:center;gap:9px;color:var(--accent);font-size:12px}.eyebrow:before{content:'';width:23px;height:1px;background:var(--accent)}h1{font-weight:300;font-size:clamp(30px,4vw,58px);letter-spacing:-2px;line-height:1.15;margin:8px 0 9px}.scene-info p{font-size:13px;color:#afc4cf;margin:0 0 0 3px;max-width:410px}.bottom-left{position:fixed;bottom:34px;left:40px;display:flex;gap:24px}.metric span{display:block;color:var(--muted);font-size:11px}.metric b{font-size:17px;font-weight:400;font-variant-numeric:tabular-nums}.metric b small{font-size:11px;color:var(--muted)}.flight-hint{position:fixed;bottom:42px;right:32px;color:#b9cbd5;font-size:12px;text-align:right}.flight-hint div{margin-top:7px}kbd{font:11px 'Segoe UI',sans-serif;display:inline-grid;place-items:center;min-width:22px;height:24px;border:1px solid #b0cfdf35;border-radius:4px;background:#07101999;color:#e7f1f4;margin:0 2px;padding:0 4px}.orientation{position:fixed;right:34px;top:115px;font-size:11px;color:#b6cbd1;display:flex;gap:15px;align-items:center}.compass{width:36px;height:36px;border:1px solid #c2e7ed30;border-radius:50%;display:grid;place-items:center}.compass svg{width:20px;height:20px;color:var(--accent)}
-#toast{position:fixed;left:50%;top:32px;transform:translateX(-50%);padding:10px 18px;border:1px solid var(--line);border-radius:9px;background:var(--panel);opacity:0;pointer-events:none;transition:opacity .2s;font-size:13px;max-width:65vw;text-align:center}#toast.show{opacity:1}dialog{color:var(--ink);background:#0c1b27;border:1px solid #577078;border-radius:18px;padding:30px;width:min(510px,90vw);max-height:85dvh}dialog::backdrop{background:#02080dcc;backdrop-filter:blur(8px)}dialog h2{margin:0 0 15px;font-size:25px;font-weight:400}dialog p{color:#b9cbd5;font-size:13px}dialog dl{display:grid;grid-template-columns:1fr 1fr;gap:15px;font-size:13px;margin:25px 0}dialog dd{margin:0;color:#c1d3db}dialog button{padding:10px 20px;float:right}dialog a{color:var(--accent)}dialog details{margin:18px 0;font-size:12px;color:var(--muted)}dialog summary{cursor:pointer}#error{position:fixed;inset:0;background:#071019;display:none;place-content:center;text-align:center;padding:30px;z-index:10}#error p{max-width:520px;color:var(--muted)}#error button{padding:12px}body.minimal aside,body.minimal .scene-info,body.minimal .flight-hint,body.minimal .bottom-left,body.minimal .orientation,body.minimal .brand{display:none}.mobile-controls{display:none}
+#toast{position:fixed;left:50%;top:32px;transform:translateX(-50%);padding:10px 18px;border:1px solid var(--line);border-radius:9px;background:var(--panel);opacity:0;pointer-events:none;transition:opacity .2s;font-size:13px;max-width:65vw;text-align:center}#toast.show{opacity:1}dialog{color:var(--ink);background:#0c1b27;border:1px solid #577078;border-radius:18px;padding:30px;width:min(510px,90vw);max-height:85dvh}dialog::backdrop{background:#02080dcc;backdrop-filter:blur(8px)}dialog h2{margin:0 0 15px;font-size:25px;font-weight:400}dialog p{color:#b9cbd5;font-size:13px}dialog dl{display:grid;grid-template-columns:1fr 1fr;gap:15px;font-size:13px;margin:25px 0}dialog dd{margin:0;color:#c1d3db}dialog button{padding:10px 20px;float:right}dialog a{color:var(--accent)}#error{position:fixed;inset:0;background:#071019;display:none;place-content:center;text-align:center;padding:30px;z-index:10}#error p{max-width:520px;color:var(--muted)}#error button{padding:12px}body.minimal aside,body.minimal .scene-info,body.minimal .flight-hint,body.minimal .bottom-left,body.minimal .orientation,body.minimal .brand{display:none}.mobile-controls{display:none}
 @media(max-width:1000px){.flight-hint{display:none}.scene-info{left:320px;right:25px}.scene-info p{max-width:350px}}
-@media(max-width:650px){header{top:17px;left:18px;right:18px}.brand{font-size:20px}.brand small{font-size:10px}.live{display:none}aside{left:16px;top:84px;width:218px;max-height:calc(100dvh - 280px);padding:14px 9px}.world{padding:8px}.world small{font-size:10px}.settings{margin-top:10px}.scene-info{left:20px;bottom:114px}.scene-info h1{font-size:34px;letter-spacing:-1px}.scene-info p{display:none}.bottom-left{left:auto;right:20px;bottom:124px;gap:15px}.orientation{display:none}.mobile-controls{position:fixed;bottom:20px;left:18px;right:18px;display:flex;justify-content:space-between;pointer-events:none}.mobile-controls div{display:flex;gap:5px}.mobile-controls button{width:42px;height:46px;background:#0b1a27db;pointer-events:auto;touch-action:none}#toast{top:auto;bottom:80px;max-width:90vw;width:max-content}.scene-info .eyebrow{font-size:10px}}
+@media(max-width:650px){header{top:17px;left:18px;right:18px}.brand{font-size:20px}.brand small{font-size:10px}.live{display:none}aside{left:16px;top:84px;width:218px;max-height:calc(100dvh - 170px);padding:14px 9px}.world{padding:8px}.world small{font-size:10px}.settings{margin-top:10px}.scene-info,.bottom-left,.orientation,#fullscreen{display:none}.mobile-controls{position:fixed;bottom:20px;left:18px;right:18px;display:flex;justify-content:space-between;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.mobile-controls div{display:flex;gap:5px}.mobile-controls button{width:42px;height:46px;background:#0b1a27db;pointer-events:auto;touch-action:none}.mobile-controls div+div button{width:auto;padding:0 12px;font-size:13px}#toast{top:auto;bottom:80px;max-width:90vw;width:max-content}#cancelRender{margin-top:18px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 #renderPreview{display:block;width:auto;height:auto;max-width:80vw;max-height:min(80dvh,calc(100dvh - 110px));object-fit:contain;margin:0 auto 12px;border-radius:8px}
 #renderDialog:has(#renderPreview:not([hidden])){width:max-content;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:16px}
 #renderDialog:has(#renderPreview:not([hidden])) h2,#renderDialog:has(#renderPreview:not([hidden])) #renderStatus,#renderDialog:has(#renderPreview:not([hidden])) #renderProgress{display:none}
 .loading-orbit{width:48px;height:48px;justify-self:center;border:2px solid #83eeee20;border-top-color:#83eeee;border-right-color:#83eeee70;border-radius:50%;animation:loading-turn 1.2s linear infinite;box-shadow:0 0 24px #83eeee10}
 @keyframes loading-turn{to{transform:rotate(360deg)}}
+.load-bar{width:min(260px,60vw);height:3px;margin:10px auto 0;border-radius:3px;background:#83eeee1f;overflow:hidden}.load-bar i{display:block;height:100%;background:#83eeee;box-shadow:0 0 10px #83eeee;transform-origin:left;transform:scaleX(var(--progress,0));transition:transform .25s ease-out}
+dialog .github{float:left;display:grid;place-items:center;width:42px;height:42px;border-radius:9px;color:var(--ink);transition:background .18s}dialog .github:hover{background:#ffffff0e}dialog .github svg{width:24px;height:24px;fill:currentColor;stroke:none}
 @media(prefers-reduced-motion:reduce){.loading-orbit{animation:none}}
 </style>
 </head>
 <body>
-<canvas id="view" tabindex="0" aria-label="Interactive fractal world. W A S D to fly, Q down, E up. Drag to look. Scroll to change speed."></canvas><div class="shade"></div>
+<canvas id="view" tabindex="0" aria-label="Interactive fractal world. W A S D to fly, Q up, E down. Drag to look. Scroll to change speed."></canvas><div class="shade"></div>
 <header><div class="brand"><svg viewBox="0 0 32 36" aria-hidden="true"><path d="M16 2 30 10v16l-14 8L2 26V10Z M2 10l14 8 14-8 M16 18v16 M9 14v8l7 4 7-4v-8 M9 6l14 8v16"/></svg><div>foldspace<small>A little further into infinity</small></div></div><div class="top-actions"><button class="icon" id="toggleUI" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><button class="icon" id="help" title="Flight controls (?)" aria-label="Flight controls"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4 M12 16h.01"/></svg></button><button class="icon" id="fullscreen" title="Enter fullscreen (F)" aria-label="Enter fullscreen"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div></header>
-<aside id="panel" aria-label="World and rendering controls"><div id="worlds"></div><div class="settings"><div class="setting"><label for="speed">Flight speed <output id="speedValue">1.0×</output></label><input id="speed" type="range" min="0.1" max="10" step=".1" value="1"></div><div class="setting"><label for="detail">Fractal depth <output id="detailValue">Standard</output></label><input id="detail" type="range" min="0" max="4" step="1" value="1"></div><div class="setting"><label for="quality">Render quality</label><select id="quality"><option value="auto">Automatic</option><option value="low">Performance</option><option value="high">High detail</option><option value="ultra">Ultra</option></select></div><label class="switch-row" for="repeat">Endless repeating space<input id="repeat" type="checkbox" checked></label></div><div class="panel-footer"><button id="reset" title="Return to starting view (R)">Reset view</button><button id="capture" title="Render image">Render image</button></div></aside>
+<aside id="panel" aria-label="World and rendering controls"><div id="worlds"></div><div class="settings"><div class="setting"><label for="speed">Flight speed <output id="speedValue">1.0×</output></label><input id="speed" type="range" min="0.1" max="10" step=".1" value="1"></div><div class="setting"><label for="detail">Fractal depth <output id="detailValue">Standard</output></label><input id="detail" type="range" min="0" max="4" step="1" value="1"></div><div class="setting"><label for="fog">Fog distance <output id="fogValue">1.0×</output></label><input id="fog" type="range" min="0.3" max="3" step=".1" value="1"></div><div class="setting"><label for="quality">Render quality</label><select id="quality"><option value="auto">Automatic</option><option value="low">Performance</option><option value="high">High detail</option><option value="ultra">Ultra</option></select></div><label class="switch-row" for="repeat">Endless repeating space<input id="repeat" type="checkbox" checked></label></div><div class="panel-footer"><button id="reset" title="Return to starting view (R)">Reset view</button><button id="capture" title="Render image">Render image</button></div></aside>
 <div class="bottom-left"><div class="metric"><span>Frame rate</span><b id="fps">— <small>fps</small></b></div><div class="metric"><span>Surface distance</span><b id="depth">—<small> u</small></b></div></div>
 <section class="scene-info"><div class="eyebrow" id="formula">Box folds / sphere inversions</div><h1 id="title">The buried cathedral</h1><p id="description">Ancient geometry, half-lost in the sandstorm.</p></section>
-<div class="flight-hint"><div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> fly <span style="margin-left:14px"><kbd>Q</kbd><kbd>E</kbd> down / up</span></div><div>Drag to look <span style="margin:0 9px;color:#6b858f">/</span> Scroll to change speed <span style="margin:0 9px;color:#6b858f">/</span> <kbd>Shift</kbd> boost</div></div>
-<div class="mobile-controls" aria-label="Touch flight controls"><div><button data-key="KeyA" aria-label="Fly left">←</button><button data-key="KeyW" aria-label="Fly forward">↑</button><button data-key="KeyS" aria-label="Fly backward">↓</button><button data-key="KeyD" aria-label="Fly right">→</button></div><div><button data-key="KeyQ" aria-label="Fly down">Q</button><button data-key="KeyE" aria-label="Fly up">E</button></div></div>
+<div class="flight-hint"><div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> fly <span style="margin-left:14px"><kbd>Q</kbd><kbd>E</kbd> up / down</span></div><div>Drag to look <span style="margin:0 9px;color:#6b858f">/</span> Scroll to change speed <span style="margin:0 9px;color:#6b858f">/</span> <kbd>Shift</kbd> boost</div></div>
+<div class="mobile-controls" aria-label="Touch flight controls"><div><button data-key="KeyA" aria-label="Fly left">←</button><button data-key="KeyW" aria-label="Fly forward">↑</button><button data-key="KeyS" aria-label="Fly backward">↓</button><button data-key="KeyD" aria-label="Fly right">→</button></div><div><button data-key="KeyQ" aria-label="Fly up">Up</button><button data-key="KeyE" aria-label="Fly down">Down</button></div></div>
 <div id="toast" role="status"></div>
-<dialog id="guide"><h2>Your way into the infinite</h2><dl><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Forward, left, back, right</dd><dt><kbd>Q</kbd> / <kbd>E</kbd></dt><dd>Straight down / up</dd><dt>Left mouse drag / arrow keys</dt><dd>Look around</dd><dt>Scroll / <kbd>+</kbd> <kbd>−</kbd></dt><dd>Increase / decrease speed</dd><dt><kbd>Shift</kbd> / <kbd>Alt</kbd></dt><dd>Boost / precision flight</dd><dt><kbd>R</kbd> / <kbd>H</kbd> / <kbd>F</kbd></dt><dd>Reset / hide UI / fullscreen</dd></dl><p>Flight slows near surfaces so you can explore tiny details.</p><details><summary>About the worlds</summary><p>Formula references: <a href="https://sites.google.com/site/mandelbox/what-is-a-mandelbox" target="_blank" rel="noopener">Tom Lowe’s Mandelbox</a>, <a href="https://www.skytopia.com/project/fractal/mandelbulb.html" target="_blank" rel="noopener">Daniel White’s Mandelbulb</a>, <a href="https://iquilezles.org/articles/menger/" target="_blank" rel="noopener">Inigo Quilez’s Menger sponge</a>, and <a href="https://blog.hvidtfeldts.net/index.php/category/distance-estimation/" target="_blank" rel="noopener">Syntopia’s distance-estimation articles</a>.</p></details><div hidden><p id="precisionReport">Extended precision is checked on your GPU using a deep Mandelbox sample.</p><button id="precisionCheck" type="button" style="float:none">Check deep precision</button> <button id="visitDeep" type="button" style="float:none" hidden>Explore test detail</button></div><button id="closeGuide">Close</button></dialog>
+<dialog id="guide"><h2>Your way into the infinite</h2><dl><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Forward, left, back, right</dd><dt><kbd>Q</kbd> / <kbd>E</kbd></dt><dd>Straight up / down</dd><dt>Left mouse drag / arrow keys</dt><dd>Look around</dd><dt>Scroll / <kbd>+</kbd> <kbd>−</kbd></dt><dd>Increase / decrease speed</dd><dt><kbd>Shift</kbd> / <kbd>Alt</kbd></dt><dd>Boost / precision flight</dd><dt><kbd>R</kbd> / <kbd>H</kbd> / <kbd>F</kbd></dt><dd>Reset / hide UI / fullscreen</dd></dl><p>Flight slows near surfaces so you can explore tiny details.</p><p>Formula references: <a href="https://sites.google.com/site/mandelbox/what-is-a-mandelbox" target="_blank" rel="noopener">Tom Lowe’s Mandelbox</a>, <a href="https://www.skytopia.com/project/fractal/mandelbulb.html" target="_blank" rel="noopener">Daniel White’s Mandelbulb</a>, <a href="https://iquilezles.org/articles/menger/" target="_blank" rel="noopener">Inigo Quilez’s Menger sponge</a>, and <a href="https://blog.hvidtfeldts.net/index.php/category/distance-estimation/" target="_blank" rel="noopener">Syntopia’s distance-estimation articles</a>.</p><div hidden><p id="precisionReport">Extended precision is checked on your GPU using a deep Mandelbox sample.</p><button id="precisionCheck" type="button" style="float:none">Check deep precision</button> <button id="visitDeep" type="button" style="float:none" hidden>Explore test detail</button></div><a class="github" href="https://github.com/paintoshi/fractal-3d-explorer" target="_blank" rel="noopener" title="View the source on GitHub" aria-label="View the source on GitHub (opens in a new tab)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z"/></svg></a><button id="closeGuide">Close</button></dialog>
 <dialog id="renderDialog" aria-labelledby="renderTitle"><h2 id="renderTitle">Rendering your world</h2><p id="renderStatus" role="status">Preparing your image…</p><progress id="renderProgress" max="100" value="0" aria-label="Image rendering progress" style="width:100%;height:10px;accent-color:var(--accent)"></progress><img id="renderPreview" hidden alt="Completed high-resolution fractal render"><a id="renderDownload" hidden style="display:inline-block;padding:10px 0" download>Download PNG</a><button id="cancelRender">Cancel render</button></dialog>
-<div id="loading" role="status" style="position:fixed;inset:0;z-index:5;background:#071019ed;display:grid;place-content:center;text-align:center"><span class="loading-orbit" aria-hidden="true"></span><h2 style="font-weight:300">Preparing your worlds</h2><p style="color:var(--muted)">Rendering the highest possible quality</p></div>
+<div id="loading" role="status" style="position:fixed;inset:0;z-index:5;background:#071019ed;display:grid;place-content:center;text-align:center"><span class="loading-orbit" aria-hidden="true"></span><h2 style="font-weight:300">Preparing your worlds</h2><p id="loadStatus" style="color:var(--muted)">Compiling the fractal shaders…</p><div class="load-bar" id="loadBar" role="progressbar" aria-label="Loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div></div>
 <div id="error" role="alert"><h2>We couldn’t start the renderer.</h2><p id="errorText"></p><button onclick="location.reload()">Try again</button></div>
 <script id="vertex" type="x-shader/x-vertex">#version 300 es
 precision highp float;
@@ -52,11 +54,12 @@ precision highp float;
 precision highp int;
 in vec2 uv;out vec4 frag;
 uniform vec2 resolution,tileOrigin;
-uniform vec3 eye,eyeLow,forward,right,up,colorA,colorB,fogColor;
-uniform bool preciseMode;
+uniform vec3 eye,eyeLow,forward,right,up,colorA,colorB,fogColor,glowColor;
+// world and preciseMode are constants injected per program (see sceneSource), so each
+// compile only contains one formula; the full combined shader took over a minute on D3D.
 uniform highp uint roundMask;
-uniform int world,iterations,steps,shadingSamples;
-uniform float epsilon,period,detailBias;
+uniform int iterations,steps,shadingSamples;
+uniform float epsilon,period,detailBias,fogScale;
 uniform bool repeating;
 // Blockworld repeats horizontally only, so it stays a single layer of terrain.
 vec3 wrapPoint(vec3 p){if(!repeating)return p;vec3 q=mod(p+period*.5,period)-period*.5;return world==3?vec3(q.x,p.y,q.z):q;}
@@ -69,19 +72,18 @@ vec2 fastField(vec3 pp){
   for(int i=0;i<min(iterations,64);i++){z=clamp(z,-1.,1.)*2.-z;float r=maxComponent(abs(z));float rr=r*r;float k=rr<.25?4.:rr<1.?1./rr:1.;z=z*(k*-2.5)+p;dr=dr*k*2.5+1.;trap=min(trap,r);if(dr>1e26)break;}
   d=maxComponent(abs(z))/dr;
  }else if(world==0){
-  for(int i=0;i<min(iterations,64);i++){z=clamp(z,-1.,1.)*2.-z;float k=clamp(1./max(dot(z,z),1e-9),1.,4.);z*=k;dr*=k;z=z*(-1.8)+p;dr=dr*1.8+1.;trap=min(trap,length(z));if(dr>1e26)break;}
-  d=length(z)/dr;
+  for(int i=0;i<min(iterations,64);i++){z=clamp(z,-1.,1.)*2.-z;float k=clamp(1./max(dot(z,z),1e-9),1.,4.);z*=k;dr*=k;z=z*(-1.8)+p;dr=dr*1.8+1.;trap=min(trap,dot(z,z));if(dr>1e26)break;}
+  d=length(z)/dr;trap=sqrt(trap);
  }else if(world==1){
   z=p/1.6;vec3 a=abs(z)-1.;d=max(a.x,max(a.y,a.z));float s=1.;
-  for(int i=0;i<min(iterations,22);i++){vec3 a=mod(z*s,2.)-1.;s*=3.;vec3 r=abs(1.-3.*abs(a));float c=(min(max(r.x,r.y),min(max(r.y,r.z),max(r.z,r.x)))-1.)/s;d=max(d,c);trap=min(trap,length(r));}d*=1.6;
+  for(int i=0;i<min(iterations,22);i++){vec3 a=mod(z*s,2.)-1.;s*=3.;vec3 r=abs(1.-3.*abs(a));float c=(min(max(r.x,r.y),min(max(r.y,r.z),max(r.z,r.x)))-1.)/s;d=max(d,c);trap=min(trap,dot(r,r));}d*=1.6;trap=sqrt(trap);
  }else if(world==2){
   float r=0.;
-  for(int i=0;i<min(iterations,64);i++){r=length(z);trap=min(trap,r);if(r>3.)break;if(r<1e-8){z=p;continue;}float theta=acos(clamp(z.z/r,-1.,1.))*8.;float phi=atan(z.y,z.x)*8.;float r7=pow(r,7.);dr=r7*8.*dr+1.;z=r7*r*vec3(sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta))+p;}
+  for(int i=0;i<min(iterations,64);i++){r=length(z);trap=min(trap,r);if(r>3.)break;if(r<1e-8){z=p;continue;}float theta=acos(clamp(z.z/r,-1.,1.))*8.;float phi=atan(z.y,z.x)*8.;float r2=r*r,r4=r2*r2,r7=r4*r2*r;dr=r7*8.*dr+1.;z=r7*r*vec3(sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta))+p;}
   r=length(z);d=.5*log(max(r,1.00001))*r/dr;
  }else{
-  for(int i=0;i<min(iterations,48);i++){z=clamp(z,vec3(-1.),vec3(1.))*2.-z;float k=max(1.2/max(dot(z,z),1e-12),1.);z*=k;dr*=k;trap=min(trap,length(z));if(dr>1e26)break;}
-  d=.3*abs(min(length(z.xy),min(length(z.yz),length(z.xz)))-.22)/dr;
-
+  for(int i=0;i<min(iterations,48);i++){z=clamp(z,vec3(-1.),vec3(1.))*2.-z;float r2=max(dot(z,z),1e-12);float k=max(1.2/r2,1.);z*=k;dr*=k;trap=min(trap,r2*k*k);if(dr>1e26)break;}
+  d=.3*abs(min(length(z.xy),min(length(z.yz),length(z.xz)))-.22)/dr;trap=sqrt(trap);
  }
  return vec2(d,trap);
 }
@@ -114,20 +116,22 @@ D3 fold3(D3 a){return D3(fold(a.x),fold(a.y),fold(a.z));}
 D3 mod3(D3 a,float period){return D3(dmod(a.x,period),dmod(a.y,period),dmod(a.z,period));}
 D3 abs3(D3 a){return D3(dab(a.x),dab(a.y),dab(a.z));}
 vec3 value3(D3 a){return vec3(val(a.x),val(a.y),val(a.z));}
+// Orbit traps only color the surface, so single precision is enough for them.
+float sq(vec3 a){return dot(a,a);}
 vec2 preciseField(vec3 offset){
  D3 p=add3(D3(vec2(eye.x,eyeLow.x),vec2(eye.y,eyeLow.y),vec2(eye.z,eyeLow.z)),from3(offset));
  if(repeating){D3 q=add3(mod3(add3(p,from3(vec3(period*.5))),period),from3(vec3(-period*.5)));if(world==3)q.y=p.y;p=q;}
  D3 z=p;float dr=1.,trap=1e5,d=0.;
  if(world==0){
-  for(int i=0;i<min(iterations,64);i++){z=fold3(z);vec2 r2=dot3(z);vec2 k=lessd(r2,ds(.25))?ds(4.):lessd(ds(1.),r2)?ds(1.):dv(ds(1.),r2);z=mul3(z,k);dr*=val(k);z=add3(mul3(z,vec2(-1.8,-4.7683715864721421e-08)),p);dr=dr*1.8+1.;trap=min(trap,len3(z));if(dr>1e26)break;}d=len3(z)/dr;
+  for(int i=0;i<min(iterations,64);i++){z=fold3(z);vec2 r2=dot3(z);vec2 k=lessd(r2,ds(.25))?ds(4.):lessd(ds(1.),r2)?ds(1.):dv(ds(1.),r2);z=mul3(z,k);dr*=val(k);z=add3(mul3(z,vec2(-1.8,-4.7683715864721421e-08)),p);dr=dr*1.8+1.;trap=min(trap,sq(value3(z)));if(dr>1e26)break;}d=len3(z)/dr;trap=sqrt(trap);
  }else if(world==1){
   z=mul3(p,ds(.625));vec3 a=value3(add3(abs3(z),from3(vec3(-1.))));d=max(a.x,max(a.y,a.z));float scale=1.;
-  for(int i=0;i<min(iterations,22);i++){D3 a=add3(mod3(mul3(z,ds(scale)),2.),from3(vec3(-1.)));scale*=3.;D3 r=abs3(add3(from3(vec3(1.)),mul3(abs3(a),ds(-3.))));vec2 cut=mind(maxd(r.x,r.y),mind(maxd(r.y,r.z),maxd(r.z,r.x)));float c=val(subd(cut,ds(1.)))/scale;d=max(d,c);trap=min(trap,len3(r));}d*=1.6;
+  for(int i=0;i<min(iterations,22);i++){D3 a=add3(mod3(mul3(z,ds(scale)),2.),from3(vec3(-1.)));scale*=3.;D3 r=abs3(add3(from3(vec3(1.)),mul3(abs3(a),ds(-3.))));vec2 cut=mind(maxd(r.x,r.y),mind(maxd(r.y,r.z),maxd(r.z,r.x)));float c=val(subd(cut,ds(1.)))/scale;d=max(d,c);trap=min(trap,sq(value3(r)));}d*=1.6;trap=sqrt(trap);
  }else if(world==3){
   for(int i=0;i<min(iterations,64);i++){z=fold3(z);D3 a=abs3(z);vec2 r=maxd(a.x,maxd(a.y,a.z));vec2 r2=dm(r,r);vec2 k=lessd(r2,ds(.25))?ds(4.):lessd(r2,ds(1.))?dv(ds(1.),r2):ds(1.);z=add3(mul3(z,dm(k,ds(-2.5))),p);dr=dr*val(k)*2.5+1.;trap=min(trap,val(r));if(dr>1e26)break;}
   D3 a=abs3(z);d=val(maxd(a.x,maxd(a.y,a.z)))/dr;
  }else{
-  for(int i=0;i<min(iterations,48);i++){z=fold3(z);vec2 r2=maxd(dot3(z),ds(1e-28));vec2 k=lessd(r2,vec2(1.2,-4.7683715864721421e-08))?dv(vec2(1.2,-4.7683715864721421e-08),r2):ds(1.);z=mul3(z,k);dr*=val(k);trap=min(trap,len3(z));if(dr>1e26)break;}
+  for(int i=0;i<min(iterations,48);i++){z=fold3(z);vec2 r2=maxd(dot3(z),ds(1e-28));vec2 k=lessd(r2,vec2(1.2,-4.7683715864721421e-08))?dv(vec2(1.2,-4.7683715864721421e-08),r2):ds(1.);z=mul3(z,k);dr*=val(k);trap=min(trap,sq(value3(z)));if(dr>1e26)break;}trap=sqrt(trap);
   vec2 a=dsqrt(da(dm(z.x,z.x),dm(z.y,z.y))),b=dsqrt(da(dm(z.y,z.y),dm(z.z,z.z))),c=dsqrt(da(dm(z.x,z.x),dm(z.z,z.z)));vec2 r=val(a)<val(b)?a:b;r=val(r)<val(c)?r:c;d=.3*val(dab(subd(r,vec2(0.22,1.1920928966180355e-09))))/dr;
  }
  return vec2(d,trap);
@@ -142,41 +146,66 @@ float sunVisibility(vec3 p,vec3 n,vec3 l,float hitE,float t){
  for(int j=1;j<=min(shadingSamples,4);j++){float travel=h*float(j*j);visibility=min(visibility,clamp(de(p+n*hitE*4.+l*travel)*5./travel,0.,1.));}
  return visibility;
 }
+// Longer penumbra march so sunlight can stream through open passages.
+float softShadow(vec3 p,vec3 l,float start,float reach){
+ float visibility=1.,s=start;
+ for(int j=0;j<24;j++){float h=de(p+l*s);visibility=min(visibility,10.*h/s);s+=clamp(h,start,reach*.12);if(visibility<.02||s>reach)break;}
+ return smoothstep(0.,1.,clamp(visibility,0.,1.));
+}
 void main(){
  vec2 q=(gl_FragCoord.xy+tileOrigin-.5*resolution)/resolution.y;vec3 rd=normalize(forward+q.x*right*1.24+q.y*up*1.24);
- float t=0.,d=0.,glow=0.,hitE=epsilon;vec2 sampleF;bool hit=false;int count=0;
- float farPlane=repeating?(world==3?22.:period*3.):35.;
- for(int i=0;i<min(steps,480);i++){vec3 p=rd*t;sampleF=field(p);d=sampleF.x;hitE=max(epsilon,t*detailBias/resolution.y);glow+=exp(-abs(d)*15.)*.006;count=i;if(d<hitE){hit=true;break;}t+=max(d*.7,hitE*.3);if(t>farPlane)break;}
+ // The Mandelbox sun sits behind the starting view so the first look is backlit.
+ vec3 l=normalize(world==0?vec3(-.7,1.,-.5):vec3(.7,1.,.5));
+ float t=0.,d=0.,glow=0.,hitE=epsilon;vec2 sampleF;bool hit=false;
+ // Thinner fog reveals more distance, so the march must reach further before giving up.
+ float farPlane=(repeating?(world==3?22.:period*3.):35.)*max(1.,fogScale);
+ for(int i=0;i<min(steps,480);i++){vec3 p=rd*t;sampleF=field(p);d=sampleF.x;hitE=max(epsilon,t*detailBias/resolution.y);if(world==1)glow+=exp(-abs(d)*15.)*.006;if(d<hitE){hit=true;break;}t+=max(d*.7,hitE*.3);if(t>farPlane)break;}
  vec3 fog=fogColor;vec3 atmosphere;
  if(world==3){
-  float sun=pow(max(dot(rd,normalize(vec3(.7,1.,.5))),0.),24.);
-  atmosphere=mix(fog,vec3(.3,.48,.8),smoothstep(-.05,.6,rd.y))+vec3(.5,.42,.3)*sun;
+  float sun=pow(max(dot(rd,l),0.),24.);
+  atmosphere=mix(fog,vec3(.2,.32,.58),smoothstep(-.05,.6,rd.y))+vec3(.5,.42,.3)*sun;
  }else{float sky=pow(max(dot(rd,normalize(vec3(.5,.3,-.8))),0.),12.);atmosphere=fog*(1.+sky*.65);}
  vec3 col=atmosphere;
  if(hit){
-  vec3 p=rd*t;vec3 n=normalAt(p,hitE*1.8);vec3 l=normalize(vec3(.7,1.,.5));float dif=max(dot(n,l),0.);float back=max(dot(n,-l),0.);float ao=0.;
+  vec3 p=rd*t;vec3 n=normalAt(p,hitE*1.8);float dif=max(dot(n,l),0.);float back=max(dot(n,-l),0.);float ao=0.;
   for(int j=1;j<=min(shadingSamples,4);j++){float h=world==4?max(hitE*5.,min(t*.045,.045))*float(j*j):hitE*float(j)*5.;ao+=(h-de(p+n*h))/h*.14;}ao=clamp(1.-ao,.15,1.);
   float material=.5+.5*sin(log(1.+sampleF.y)*8.+dot(wrapPoint(eye+p),vec3(1.7,2.3,1.1)));vec3 base=mix(colorA,colorB,smoothstep(.28,.72,material));
   float spec=pow(max(dot(n,normalize(l-rd)),0.),38.);float rim=pow(1.-max(dot(n,-rd),0.),3.);
-  float cavities=1.-float(count)/float(steps);col=base*(.13+.85*dif+.15*back)*ao*.8+mix(base,vec3(1.),.2)*spec*.4;
+  float visibility=world==1?softShadow(p+n*hitE*4.,l,max(hitE*6.,.004),2.4):sunVisibility(p,n,l,hitE,t);
+  // Sky from above, dimmer bounce from below: shadowed faces keep their shape.
+  float sky=.5+.5*n.y,sunlit=dif*mix(.1,1.,visibility);
   if(world==4){
    // Broad occlusion and directional shading preserve dark, solid foreground forms.
-   float visibility=sunVisibility(p,n,l,hitE,t);
    col=base*(.018+1.05*dif*mix(.12,1.,visibility)+.035*back)*pow(ao,1.7);
    col+=mix(base,vec3(.25,.45,.6),.15)*spec*.22*visibility+base*rim*.035*ao;
   }else if(world==3){
    // Upward faces read as grass, the sides as earth; sky light fills the shadows.
-   float visibility=sunVisibility(p,n,l,hitE,t);
    base=mix(colorA*(.75+.5*material),colorB*(.8+.4*material),smoothstep(.55,.9,n.y));
    col=base*(.04+1.15*dif*mix(.15,1.,visibility)+.06*back)*pow(ao,1.3);
-   col+=base*vec3(.5,.62,.85)*(.25+.2*n.y)*ao;
+   col+=base*vec3(.44,.58,.66)*(.25+.2*n.y)*ao;
   }else if(world==0||world==2){
-   col=base*(.035+.85*dif+.045*back)*pow(ao,1.4)+mix(base,vec3(.16,.22,.3),.12)*spec*.18;
-   col+=base*rim*.09*ao;
-  }else{col+=base*rim*.2*ao;}
-  float mist=(world==0||world==2)?1.-exp(-pow(max(t-period*.25,0.)/(period*.85),2.)):(world==3)?1.-exp(-pow(t/8.,2.)):(world==4)?1.-exp(-pow(t/(period*2.),2.)):1.-exp(-t/(period*.95));col=mix(col,atmosphere,mist);
+   // One wide probe finds the recesses that the pixel-scale occlusion cannot see.
+   float reach=clamp(t*.05,hitE*20.,.25),recess=1.-clamp(de(p+n*reach)/reach,0.,1.);
+   float fill=ao*(1.-.75*recess);
+   if(world==0){
+    // Low desert sun through the dust; embers smoulder in the deepest recesses.
+    col=base*(vec3(1.,.9,.76)*1.25*sunlit+vec3(.14,.14,.16)*(.3+.7*sky)*fill+.04*back)*pow(ao,1.3);
+    col+=mix(base,vec3(1.,.8,.55),.4)*spec*.3*visibility+base*rim*.12*fill;
+   }else{
+    // Cold light from above; bioluminescent polyps glow inside the coral folds.
+    col=base*(vec3(.75,.9,1.)*1.05*sunlit+fogColor*(.4+1.3*sky)*fill+.05*back)*pow(ao,1.4);
+    col+=vec3(.55,.8,1.)*spec*.25*visibility+base*rim*.12*fill;
+   }
+   col+=glowColor*smoothstep(.55,1.,recess)*(.3+.7*material);
+  }else{
+   // Light shafts fall through the passages; shadowed halls stay cool and deep.
+   col=base*(.9*sunlit+vec3(.08,.16,.2)*(.4+.6*sky)*ao+.05*back)*pow(ao,1.2);
+   col+=mix(base,vec3(1.),.3)*spec*.3*visibility+base*rim*.16*ao;
+  }
+  float ft=t/fogScale;
+  float mist=(world==0||world==2)?1.-exp(-pow(max(ft-period*.25,0.)/(period*.85),2.)):(world==3)?1.-exp(-pow(ft/8.,2.)):(world==4)?1.-exp(-pow(ft/(period*2.),2.)):1.-exp(-pow(ft/(period*.8),1.6));col=mix(col,atmosphere,mist);
  }
- if(world==1)col+=colorA*min(glow,.9)*.025;col=1.-exp(-col*1.55);col=pow(max(col,0.),vec3(.4545));frag=vec4(col,1.);
+ if(world==1)col+=glowColor*min(glow,.9)*.05;col=1.-exp(-col*1.55);col=pow(max(col,0.),vec3(.4545));frag=vec4(col,1.);
 }
 </script>
 <script id="blurShader" type="x-shader/x-fragment">#version 300 es
@@ -190,7 +219,10 @@ void main(){
  vec3 nw=texture(source,uv+vec2(-1,1)*pixel).rgb,ne=texture(source,uv+pixel).rgb,sw=texture(source,uv-pixel).rgb,se=texture(source,uv+vec2(1,-1)*pixel).rgb,c=texture(source,uv).rgb;
  vec3 lum=vec3(.299,.587,.114);float a=dot(nw,lum),b=dot(ne,lum),d=dot(sw,lum),e=dot(se,lum),m=dot(c,lum);vec2 dir=vec2(-((a+b)-(d+e)),(a+d)-(b+e));float reduce=max((a+b+d+e)*.03125,.0078125);dir=clamp(dir/(min(abs(dir.x),abs(dir.y))+reduce),-8.,8.)*pixel;
  vec3 rgbA=.5*(texture(source,uv+dir*(-1./6.)).rgb+texture(source,uv+dir*(1./6.)).rgb);vec3 rgbB=rgbA*.5+.25*(texture(source,uv-dir*.5).rgb+texture(source,uv+dir*.5).rgb);float l=dot(rgbB,lum);c=(l<min(m,min(min(a,b),min(d,e)))||l>max(m,max(max(a,b),max(d,e))))?rgbA:rgbB;
- c+=texture(bloomTexture,uv).rgb*bloomStrength*.6;float vignette=1.-.28*pow(length(((gl_FragCoord.xy+tileOrigin)/fullResolution-.5)*1.25),2.);frag=vec4(c*vignette,1);
+ c+=texture(bloomTexture,uv).rgb*bloomStrength*.6;float vignette=1.-.28*pow(length(((gl_FragCoord.xy+tileOrigin)/fullResolution-.5)*1.25),2.);
+ // Sub-LSB noise breaks up 8-bit banding in the dark fog gradients.
+ vec2 f=gl_FragCoord.xy+tileOrigin;float dither=fract(52.9829189*fract(dot(f,vec2(.06711056,.00583715))))-.5;
+ frag=vec4(c*vignette+dither/255.,1);
 }
 </script>
 <script>
@@ -199,15 +231,15 @@ void main(){
 const $=id=>document.getElementById(id), canvas=$('view');
 const icons=[ '<path d="m17 2 14 8v16l-14 8L3 26V10Z M3 10l14 8 14-8 M17 18v16 M10 14v8l7 4 7-4v-8"/>','<path d="M3 3h28v28H3Z M11 3v28M23 3v28M3 11h28M3 23h28 M11 11h12v12H11Z"/>','<path d="M17 3c8-5 15 5 10 10 10 5 5 16-2 14-4 10-15 7-15 0C0 28-3 17 5 13 0 5 10-1 17 3Z M17 10c8 0 10 13 0 14-10-1-8-14 0-14Z"/>','<path d="M2 32h30 M2 32V21h8v-7h8V5h8v11h6v16 M10 21v11 M18 14v18 M26 16v16 M2 25h30"/>','<path d="m17 2 6 9 9 6-9 6-6 11-6-11-9-6 9-6Z M17 9l8 8-8 10-8-10Z M17 2v7m15 8h-7M17 27v7M2 17h7"/>' ];
 const worlds=[
- {name:'Mandelbox',tag:'Folded architectural infinity',title:'The buried cathedral',formula:'Box folds / sphere inversions',description:'Ancient geometry, half-lost in the sandstorm.',accent:[.93,.64,.35],a:[.48,.115,.024],b:[.012,.02,.035],fog:[.24,.175,.12],period:12,pos:[4.6,2.6,5.8],target:[0,0,0],it:15},
- {name:'Menger sponge',tag:'A labyrinth within a labyrinth',title:'The infinite lattice',formula:'Recursive cubic subtraction',description:'Passages within passages. Follow the light through.',accent:[.2,.88,.94],a:[.025,.64,.72],b:[.025,.64,.72],fog:[.004,.024,.03],period:8,pos:[3.1,2.2,3.8],target:[0,0,0],it:6},
- {name:'Mandelbulb',tag:'Organic, otherworldly detail',title:'The midnight reef',formula:'Spherical power-8 iteration',description:'Dark coral forms, fading into the blue.',accent:[.22,.68,.83],a:[.005,.17,.22],b:[.008,.025,.13],fog:[.018,.05,.13],period:4.8,pos:[2.1,1.15,2.3],target:[0,0,0],it:12},
- {name:'Blockworld',tag:'Voxel-like fractal terrain',title:'The endless blocklands',formula:'Box folds / cube inversions',description:'Grassy terraces and stepped canyons, all from one folding rule.',accent:[.55,.82,.36],a:[.24,.2,.15],b:[.2,.4,.09],fog:[.66,.72,.8],period:4,pos:[.2,2.9,1.6],target:[1.3,1.85,-1.8],it:12},
+ {name:'Mandelbox',tag:'Folded architectural infinity',title:'The buried cathedral',formula:'Box folds / sphere inversions',description:'Ancient geometry, half-lost in the sandstorm.',accent:[.93,.64,.35],a:[.48,.115,.024],b:[.018,.03,.055],fog:[.27,.12,.035],glow:[.4,.09,.012],period:12,pos:[4.6,2.6,5.8],target:[0,0,0],it:15},
+ {name:'Menger sponge',tag:'A labyrinth within a labyrinth',title:'The infinite lattice',formula:'Recursive cubic subtraction',description:'Passages within passages. Follow the light through.',accent:[.2,.88,.94],a:[.025,.64,.72],b:[.02,.36,.48],fog:[.004,.024,.03],glow:[.2,.9,1],period:8,pos:[3.1,2.2,3.8],target:[0,0,0],it:6},
+ {name:'Mandelbulb',tag:'Organic, otherworldly detail',title:'The midnight reef',formula:'Spherical power-8 iteration',description:'Dark coral forms, fading into the blue.',accent:[.22,.68,.83],a:[.005,.17,.22],b:[.008,.025,.13],fog:[.018,.05,.13],glow:[.01,.15,.14],period:4.8,pos:[2.1,1.15,2.3],target:[0,0,0],it:12},
+ {name:'Blockworld',tag:'Voxel-like fractal terrain',title:'The endless blocklands',formula:'Box folds / cube inversions',description:'Grassy terraces and stepped canyons, all from one folding rule.',accent:[.55,.82,.36],a:[.16,.14,.09],b:[.1,.27,.05],fog:[.34,.28,.4],period:4,pos:[.2,2.9,1.6],target:[1.3,1.85,-1.8],it:12},
  {name:'Kleinian tunnels',tag:'Passages within passages',title:'The velvet labyrinth',formula:'Box inversion / cylindrical passages',description:'Cobalt vaults and crimson threads. Follow the spaces between.',accent:[.32,.55,1],a:[.008,.018,.8],b:[.55,.004,.012],fog:[.015,.11,.15],period:4,pos:[1.3,.9,1.5],target:[0,0,0],it:12}
 ];
 let flightSpeed=1;
 let world=0,pos=[0,0,0],yaw=0,pitch=0,keys=new Set(),drag=false,lastX=0,lastY=0,dive=0,scale=.7,frame=0,lastTime=0,lastDraw=0,avgMs=33.3,adjustAt=0,rendering=false,renderCancelled=false,nearest=1,paused=false,raf=0,toastTimer;
-let gl,scene,blur,post,targets=[],w=0,h=0,iterations=15;
+let gl,blur,post,targets=[],w=0,h=0,iterations=15;
 const norm=v=>{const l=Math.hypot(...v)||1;return v.map(x=>x/l)};
 function basis(){const f=[Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)],r=[-Math.cos(yaw),0,Math.sin(yaw)];return {f,r,u:[-Math.sin(yaw)*Math.sin(pitch),Math.cos(pitch),-Math.cos(yaw)*Math.sin(pitch)]};}
 function tell(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2800);}
@@ -216,6 +248,8 @@ function selectWorld(i){world=i;reset();const v=worlds[i];$('title').textContent
 worlds.forEach((v,i)=>{const b=document.createElement('button');b.className='world';b.style.setProperty('--swatch',`rgb(${(v.accent||v.a).map(x=>x*255).join(',')})`);b.innerHTML=`<span class="mark"><svg viewBox="0 0 34 36" aria-hidden="true">${icons[i]}</svg></span><span><strong>${v.name}</strong><small>${v.tag}</small></span><span class="dot"></span>`;b.onclick=()=>{selectWorld(i);saveSettings();};$('worlds').append(b);});selectWorld(0);
 // Blockworld repeats horizontally only; its height axis never wraps.
 const wraps=axis=>$('repeat').checked&&!(world===3&&axis===1);
+const fogDistance=()=>Math.max(.3,Math.min(3,+$('fog').value||1));
+function showFog(){$('fogValue').textContent=fogDistance().toFixed(1)+'×';}
 // CPU mirror: only a few point queries per frame for scale-aware, conservative flight.
 function distance(pp){const v=worlds[world],period=v.period;let p=pp.map((x,i)=>wraps(i)?((x+period*.5)%period+period)%period-period*.5:x),z=[...p],dr=1,d=0,its=iterations;
  if(world===0){for(let i=0;i<its;i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);let k=Math.max(1,Math.min(4,1/Math.max(z.reduce((a,x)=>a+x*x,0),1e-9)));z=z.map((x,j)=>x*k*-1.8+p[j]);dr=dr*k*1.8+1;if(dr>1e26)break;}return Math.hypot(...z)/dr;}
@@ -225,15 +259,27 @@ function distance(pp){const v=worlds[world],period=v.period;let p=pp.map((x,i)=>
  for(let i=0;i<Math.min(its,48);i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);let k=Math.max(1.2/Math.max(z.reduce((a,x)=>a+x*x,0),1e-12),1);z=z.map(x=>x*k);dr*=k;if(dr>1e26)break;}return .3*Math.abs(Math.min(Math.hypot(z[0],z[1]),Math.hypot(z[1],z[2]),Math.hypot(z[0],z[2]))-.22)/dr;
 }
 function fail(message){$('errorText').textContent=message;$('error').style.display='grid';}
-function program(id,customSource=null){const p=gl.createProgram();for(const [type,text] of [[gl.VERTEX_SHADER,$('vertex').textContent],[gl.FRAGMENT_SHADER,customSource||$(id).textContent]]){const s=gl.createShader(type);gl.shaderSource(s,text);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));gl.attachShader(p,s);gl.deleteShader(s);}gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return {p,loc:new Map()};}
-async function programAsync(id){
+// ?cold adds a random comment so the browser's shader disk cache misses, for testing first-visit loads.
+const cacheBust=/[?&]cold\b/.test(globalThis.location?.search||'')?`\n// ${Math.random()}`:'';
+function sceneSource(i,precise){return $('sceneShader').textContent.replace('precision highp int;',`precision highp int;\nconst int world=${i};\nconst bool preciseMode=${precise};`)+cacheBust;}
+function program(source){const p=gl.createProgram();for(const [type,text] of [[gl.VERTEX_SHADER,$('vertex').textContent],[gl.FRAGMENT_SHADER,source]]){const s=gl.createShader(type);gl.shaderSource(s,text);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));gl.attachShader(p,s);gl.deleteShader(s);}gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return {p,loc:new Map()};}
+async function programAsync(source){
  const p=gl.createProgram(),shaders=[];
- for(const [type,text] of [[gl.VERTEX_SHADER,$('vertex').textContent],[gl.FRAGMENT_SHADER,$(id).textContent]]){const shader=gl.createShader(type);shaders.push(shader);gl.shaderSource(shader,text);gl.compileShader(shader);gl.attachShader(p,shader);}
+ for(const [type,text] of [[gl.VERTEX_SHADER,$('vertex').textContent],[gl.FRAGMENT_SHADER,source]]){const shader=gl.createShader(type);shaders.push(shader);gl.shaderSource(shader,text);gl.compileShader(shader);gl.attachShader(p,shader);}
  gl.linkProgram(p);const parallel=gl.getExtension('KHR_parallel_shader_compile');
  if(parallel)while(!gl.getProgramParameter(p,parallel.COMPLETION_STATUS_KHR)){if(gl.isContextLost())throw Error('Graphics context lost while compiling. Please reload.');await new Promise(resolve=>setTimeout(resolve,20));}
  if(!gl.getProgramParameter(p,gl.LINK_STATUS)){const message=shaders.map(s=>gl.getShaderInfoLog(s)).join('\n')+gl.getProgramInfoLog(p);shaders.forEach(s=>gl.deleteShader(s));gl.deleteProgram(p);throw Error(message);}
  shaders.forEach(s=>gl.deleteShader(s));return {p,loc:new Map()};
 }
+// One program per world and precision mode. Fast variants all compile at start-up (~0.15 s each);
+// the much heavier deep-zoom variants compile one at a time in the background afterwards.
+const scenes=new Map();
+function sceneEntry(i,precise){const key=i+(precise?'p':'f');let entry=scenes.get(key);if(!entry){entry={program:null};entry.promise=programAsync(sceneSource(i,precise)).then(p=>{entry.program=p;wake();});scenes.set(key,entry);}return entry;}
+const needsPrecise=()=>world!==2&&nearest<.003;
+// Until the deep-zoom program is ready, deep views fall back to the fast one (softer, but never blank).
+function activeScene(){return needsPrecise()&&scenes.get(world+'p')?.program||scenes.get(world+'f')?.program;}
+async function warmPreciseScenes(){for(;;){const i=[world,0,1,3,4].find(j=>j!==2&&!scenes.has(j+'p'));if(i===undefined)return;await sceneEntry(i,true).promise.catch(console.error);}}
+let preciseNoticeWorld=-1;
 function uniform(p,name,type,...values){if(!p.loc.has(name))p.loc.set(name,gl.getUniformLocation(p.p,name));gl['uniform'+type](p.loc.get(name),...values);}
 function target(width,height){const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Unable to allocate render buffers. Try a smaller window.');return {tex,fb,width,height};}
 function resize(){let mode=$('quality').value,s=mode==='auto'?scale:mode==='low'?.45:mode==='high'?.85:1;const dpr=Math.min(devicePixelRatio,mode==='ultra'?2:1.5);let width=Math.max(2,Math.floor(innerWidth*dpr*s)),height=Math.max(2,Math.floor(innerHeight*dpr*s));if(width===w&&height===h)return;w=width;h=height;canvas.width=Math.floor(innerWidth*dpr);canvas.height=Math.floor(innerHeight*dpr);for(const t of targets){gl.deleteTexture(t.tex);gl.deleteFramebuffer(t.fb);}targets=[target(w,h),target(Math.max(2,w>>2),Math.max(2,h>>2)),target(Math.max(2,w>>2),Math.max(2,h>>2))];}
@@ -241,15 +287,15 @@ function bindTarget(t){gl.bindFramebuffer(gl.FRAMEBUFFER,t?t.fb:null);gl.viewpor
 function texture(tex,unit=0){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);}
 function precisionFloor(){return world===2?3e-7:2e-12;}
 function renderPass(buffers,output,fullSize,origin=[0,0],highQuality=false){
- const v=worlds[world],b=basis(),depthLevel=+$('detail').value;
+ const v=worlds[world],b=basis(),depthLevel=+$('detail').value,scene=activeScene();
  bindTarget(buffers[0]);gl.useProgram(scene.p);
  uniform(scene,'resolution','2fv',fullSize);uniform(scene,'tileOrigin','2fv',origin);
- for(const [name,value] of Object.entries({eye:pos,forward:b.f,right:b.r,up:b.u,colorA:v.a,colorB:v.b,fogColor:v.fog}))uniform(scene,name,'3fv',value);
- uniform(scene,'shadingSamples','1i',4);uniform(scene,'roundMask','1ui',4294967295);uniform(scene,'world','1i',world);uniform(scene,'eyeLow','3fv',pos.map(x=>x-Math.fround(x)));uniform(scene,'preciseMode','1i',world!==2&&nearest<.003?1:0);
+ for(const [name,value] of Object.entries({eye:pos,forward:b.f,right:b.r,up:b.u,colorA:v.a,colorB:v.b,fogColor:v.fog,glowColor:v.glow||[0,0,0]}))uniform(scene,name,'3fv',value);
+ uniform(scene,'shadingSamples','1i',4);uniform(scene,'roundMask','1ui',4294967295);uniform(scene,'eyeLow','3fv',pos.map(x=>x-Math.fround(x)));
  uniform(scene,'iterations','1i',Math.min(world===1?22:world===4?48:64,iterations+(highQuality?4:0)));
  uniform(scene,'steps','1i',highQuality?480:Math.min(320,($('quality').value==='low'?90:$('quality').value==='ultra'?240:160)+depthLevel*20));
  uniform(scene,'epsilon','1f',Math.max(precisionFloor(),Math.min(.0007,nearest*.001)/Math.pow(1.8,depthLevel+(highQuality?1:0))));
- uniform(scene,'detailBias','1f',highQuality?.35:.75/(1+depthLevel*.3));
+ uniform(scene,'detailBias','1f',highQuality?.35:.75/(1+depthLevel*.3));uniform(scene,'fogScale','1f',fogDistance());
  uniform(scene,'period','1f',v.period);uniform(scene,'repeating','1i',$('repeat').checked?1:0);gl.drawArrays(gl.TRIANGLES,0,3);
  const radius=Math.max(.5,fullSize[1]/900);
  gl.useProgram(blur.p);uniform(blur,'source','1i',0);bindTarget(buffers[1]);texture(buffers[0].tex);uniform(blur,'extract','1i',1);uniform(blur,'direction','2f',radius/buffers[1].width,0);gl.drawArrays(gl.TRIANGLES,0,3);
@@ -259,10 +305,10 @@ function renderPass(buffers,output,fullSize,origin=[0,0],highQuality=false){
  // Live output may be upscaled; export tiles always use a 1:1 output viewport.
  uniform(post,'fullResolution','2fv',output?fullSize:[canvas.width,canvas.height]);uniform(post,'tileOrigin','2fv',origin);gl.drawArrays(gl.TRIANGLES,0,3);
 }
-function draw(){resize();renderPass(targets,null,[w,h]);}
+function draw(){resize();if(needsPrecise()&&!scenes.get(world+'p')?.program&&preciseNoticeWorld!==world){preciseNoticeWorld=world;tell('Sharpening deep-zoom precision…');}renderPass(targets,null,[w,h]);}
 let lastRenderURL=null;
 async function renderImage(){
- if(rendering||!gl||!scene||gl.isContextLost())return;
+ if(rendering||!gl||!activeScene()||gl.isContextLost())return;
  clearInput();paused=true;rendering=true;renderCancelled=false;
  const dialog=$('renderDialog'),button=$('cancelRender');
  $('renderProgress').value=0;$('renderStatus').textContent='Preparing your image…';button.textContent='Cancel render';
@@ -275,6 +321,7 @@ async function renderImage(){
  const buffers=[];let output=null,renderCanvas=null;
  try{
   if(height>10000)throw Error('This view is too tall to export. Widen the window and try again.');
+  if(needsPrecise()){$('renderStatus').textContent='Preparing deep-zoom precision…';await sceneEntry(world,true).promise.catch(console.error);if(renderCancelled)throw Error('cancelled');}
   renderCanvas=document.createElement('canvas');renderCanvas.width=width;renderCanvas.height=height;
   const ctx=renderCanvas.getContext('2d');if(!ctx)throw Error('Unable to allocate the image canvas.');
   buffers.push(target(size,size));buffers.push(target(size/4,size/4));buffers.push(target(size/4,size/4));output=target(size,size);
@@ -313,12 +360,12 @@ async function renderImage(){
  }finally{
   for(const t of [...buffers,output].filter(Boolean)){gl.deleteTexture(t.tex);gl.deleteFramebuffer(t.fb);}
   if(renderCanvas){renderCanvas.width=1;renderCanvas.height=1;}
-  rendering=false;paused=dialog.open;lastTime=0;lastDraw=0;gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  rendering=false;paused=dialog.open;wake();gl.bindFramebuffer(gl.FRAMEBUFFER,null);
  }
 }
 $('cancelRender').onclick=()=>{if(rendering){renderCancelled=true;$('renderStatus').textContent='Cancelling…';}else $('renderDialog').close();};
 $('renderDialog').addEventListener('cancel',e=>{if(rendering){e.preventDefault();renderCancelled=true;}});
-$('renderDialog').addEventListener('close',()=>{if(!rendering){paused=false;lastTime=0;lastDraw=0;canvas.focus({preventScroll:true});}});
+$('renderDialog').addEventListener('close',()=>{if(!rendering){paused=false;wake();canvas.focus({preventScroll:true});}});
 
 function move(dt){const b=basis(),boost=keys.has('ShiftLeft')||keys.has('ShiftRight')?3:keys.has('AltLeft')?.15:1;let look=dt*1.15;yaw+=(Number(keys.has('ArrowLeft'))-Number(keys.has('ArrowRight')))*look;pitch=Math.max(-1.54,Math.min(1.54,pitch+(Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown')))*look));
  // Probe at a fixed budget so adaptive surface detail cannot feed back into itself.
@@ -328,25 +375,42 @@ function move(dt){const b=basis(),boost=keys.has('ShiftLeft')||keys.has('ShiftRi
  const probe=Math.max(precisionFloor()*4,Math.abs(distance(pos))),detail=Math.max(0,Math.log10(1/probe));
  iterations=Math.min(cap,Math.max(3,base+Math.floor(detail*2.5)));
  nearest=Math.max(precisionFloor()*4,Math.abs(distance(pos)));
- let forward=Number(keys.has('KeyW'))-Number(keys.has('KeyS')),side=Number(keys.has('KeyD'))-Number(keys.has('KeyA')),vertical=Number(keys.has('KeyE'))-Number(keys.has('KeyQ'));
+ let forward=Number(keys.has('KeyW'))-Number(keys.has('KeyS')),side=Number(keys.has('KeyD'))-Number(keys.has('KeyA')),vertical=Number(keys.has('KeyQ'))-Number(keys.has('KeyE'));
  let dir=b.f.map((x,i)=>x*forward+b.r[i]*side+(i===1?vertical:0));let len=Math.hypot(...dir);if(len>1)dir=dir.map(x=>x/len);let amount=Math.min(worlds[world].period*.18,Math.max(nearest*.8,precisionFloor()*2))*flightSpeed*boost;
  const delta=dir.map((x,i)=>x*amount*dt);let length=Math.hypot(...delta);if(length){const maxStep=Math.max(nearest*.35,precisionFloor()),factor=Math.min(1,maxStep/length);pos=pos.map((x,i)=>x+delta[i]*factor);if($('repeat').checked){const p=worlds[world].period;pos=pos.map((x,i)=>wraps(i)&&Math.abs(x)>p*.5?x-p*Math.floor((x+p*.5)/p):x);}else if(Math.hypot(...pos)>100){pos=norm(pos).map(x=>x*100);tell('Turn on repeating space to keep exploring.');}}
 }
-function tick(time){raf=requestAnimationFrame(tick);if(paused||document.hidden){lastTime=time;lastDraw=0;return;}const interval=1000/30;if(time-lastDraw<interval-.5)return;const elapsed=lastTime?time-lastTime:interval;lastDraw+=interval*Math.max(1,Math.floor((time-lastDraw+.5)/interval));const dt=Math.min(elapsed/1000,.1);lastTime=time;avgMs=avgMs*.94+elapsed*.06;move(dt);draw();frame++;if(frame%60===0)saveSettings();if(time-adjustAt>1800){if($('quality').value==='auto'){if(avgMs>39)scale=Math.max(world!==2&&nearest<.003?.18:.3,scale*(avgMs>65?.7:.88));else if(avgMs<35)scale=Math.min(1,scale+.025);}adjustAt=time;}if(frame%12===0){$('fps').innerHTML=`${Math.round(1000/avgMs)} <small>fps</small>`;$('depth').innerHTML=`${nearest.toExponential(1)}<small> u</small>`;}}
-async function initializeRenderer(){try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance',preserveDrawingBuffer:false});if(!gl)throw Error('WebGL 2 is unavailable. Open this file in a current Chrome, Edge, Firefox or Safari browser with hardware acceleration enabled.');[scene,blur,post]=await Promise.all(['sceneShader','blurShader','postShader'].map(programAsync));gl.bindVertexArray(gl.createVertexArray());requestAnimationFrame(tick);}catch(e){console.error(e);fail(e.message);}finally{$('loading').hidden=true;}}
+// Nothing in the scene animates, so an unchanged view never needs another frame.
+let lastView='',loadStage=0;
+function viewKey(){return [...pos,yaw,pitch,world,iterations,nearest,scale,innerWidth,innerHeight,devicePixelRatio,$('quality').value,$('detail').value,$('repeat').checked,fogDistance()].join();}
+function wake(){lastView='';lastTime=0;lastDraw=0;}
+function finishLoading(){
+ // Wait for the GPU so the loader stays up until the first view is really on screen.
+ gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));loadStage=3;setLoadProgress(1);setTimeout(()=>{$('loading').hidden=true;},260);
+ warmPreciseScenes();
+}
+function setLoadProgress(fraction){$('loadBar').style.setProperty('--progress',fraction);$('loadBar').setAttribute('aria-valuenow',String(Math.round(fraction*100)));}
+function tick(time){raf=requestAnimationFrame(tick);if(paused||document.hidden){lastTime=time;lastDraw=0;return;}
+ // Paint the status first: the first draw can stall while the GPU finalises the shader.
+ if(loadStage===1){loadStage=2;$('loadStatus').textContent='Rendering the first view…';return;}
+ const interval=1000/30;if(time-lastDraw<interval-.5)return;const elapsed=lastTime?time-lastTime:interval;lastDraw+=interval*Math.max(1,Math.floor((time-lastDraw+.5)/interval));const dt=Math.min(elapsed/1000,.1);lastTime=time;move(dt);
+ const view=viewKey();if(view===lastView){lastTime=0;return;}lastView=view;
+ avgMs=avgMs*.94+elapsed*.06;draw();if(loadStage===2)finishLoading();frame++;if(frame%60===0)saveSettings();if(time-adjustAt>1800){if($('quality').value==='auto'){if(avgMs>39)scale=Math.max(world!==2&&nearest<.003?.18:.3,scale*(avgMs>65?.7:.88));else if(avgMs<35)scale=Math.min(1,scale+.025);}adjustAt=time;}if(frame%12===0||frame===1){$('fps').innerHTML=`${Math.round(1000/avgMs)} <small>fps</small>`;$('depth').innerHTML=`${nearest.toExponential(1)}<small> u</small>`;}}
+async function initializeRenderer(){try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance',preserveDrawingBuffer:false});if(!gl)throw Error('WebGL 2 is unavailable. Open this file in a current Chrome, Edge, Firefox or Safari browser with hardware acceleration enabled.');const jobs=[programAsync($('blurShader').textContent),programAsync($('postShader').textContent),...worlds.map((_,i)=>sceneEntry(i,false).promise)];let done=0;jobs.forEach(job=>job.then(()=>setLoadProgress(++done/(jobs.length+1)),()=>{}));[blur,post]=await Promise.all(jobs);gl.bindVertexArray(gl.createVertexArray());loadStage=1;raf=requestAnimationFrame(tick);}catch(e){console.error(e);fail(e.message);$('loading').hidden=true;}}
 window.foldspaceReady=initializeRenderer();
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);fail('The graphics context was lost. Close other GPU-heavy tabs and choose Try again.');});
 canvas.addEventListener('pointerdown',e=>{if(rendering||e.button!==0)return;canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);drag=true;lastX=e.clientX;lastY=e.clientY;canvas.classList.add('dragging');});canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-lastX)*.003;pitch=Math.max(-1.54,Math.min(1.54,pitch-(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY;});function release(){drag=false;canvas.classList.remove('dragging');}canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);canvas.addEventListener('lostpointercapture',release);canvas.addEventListener('wheel',e=>{e.preventDefault();if(!rendering)setSpeed(flightSpeed*Math.exp(-e.deltaY*(e.deltaMode===1?.06:.002)));},{passive:false});
 const controls=new Set(['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ShiftLeft','ShiftRight','AltLeft','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Equal','Minus','NumpadAdd','NumpadSubtract']);
-addEventListener('keydown',e=>{if(rendering||$('renderDialog').open||$('guide').open||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(controls.has(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='Equal'||e.code==='NumpadAdd')setSpeed(flightSpeed*1.2);if(e.code==='Minus'||e.code==='NumpadSubtract')setSpeed(flightSpeed/1.2);if(e.repeat)return;if(e.code==='KeyR'){reset();tell('Back at the starting view');}if(e.code==='KeyH')toggleUI();if(e.code==='KeyF')fullscreen();if(e.key==='?')openGuide();});addEventListener('keyup',e=>keys.delete(e.code));function clearInput(){keys.clear();dive=0;release();}addEventListener('blur',clearInput);addEventListener('pagehide',saveSettings);document.addEventListener('visibilitychange',()=>{saveSettings();clearInput();lastTime=0;lastDraw=0;});
-document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key)};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>keys.delete(b.dataset.key);});
-function saveSettings(){try{localStorage.setItem('foldspace-settings-v1',JSON.stringify({world,worldRevision:10,speed:flightSpeed,detail:Number($('detail').value),quality:$('quality').value,repeat:$('repeat').checked,hidden:document.body.classList.contains('minimal'),camera:{pos:[...pos],yaw,pitch}}));}catch{}}
-function restoreSettings(){try{const v=JSON.parse(localStorage.getItem('foldspace-settings-v1')||'null');if(!v||typeof v!=='object')return;if(Number.isInteger(v.world)&&v.world>=0&&v.world<worlds.length)selectWorld(v.world);if(typeof v.speed==='number'&&Number.isFinite(v.speed)){flightSpeed=Math.max(.1,Math.min(10,v.speed));$('speed').value=flightSpeed.toFixed(1);$('speedValue').textContent=flightSpeed.toFixed(1)+'×';}if(Number.isInteger(v.detail)&&v.detail>=0&&v.detail<=4){$('detail').value=String(v.detail);$('detailValue').textContent=['Light','Standard','Deep','Deeper','Maximum'][v.detail];}if(['auto','low','high','ultra'].includes(v.quality))$('quality').value=v.quality;if(typeof v.repeat==='boolean')$('repeat').checked=v.repeat;if((v.world!==3||v.worldRevision===10)&&v.camera&&Array.isArray(v.camera.pos)&&v.camera.pos.length===3&&v.camera.pos.every(x=>typeof x==='number'&&Number.isFinite(x)&&Math.abs(x)<1e5)&&Number.isFinite(v.camera.yaw)&&Number.isFinite(v.camera.pitch)){pos=[...v.camera.pos];yaw=v.camera.yaw;pitch=Math.max(-1.54,Math.min(1.54,v.camera.pitch));}if(v.hidden===true)toggleUI();}catch{}}
+addEventListener('keydown',e=>{if(rendering||$('renderDialog').open||$('guide').open||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(controls.has(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='Equal'||e.code==='NumpadAdd')setSpeed(flightSpeed*1.2);if(e.code==='Minus'||e.code==='NumpadSubtract')setSpeed(flightSpeed/1.2);if(e.repeat)return;if(e.code==='KeyR'){reset();tell('Back at the starting view');}if(e.code==='KeyH')toggleUI();if(e.code==='KeyF')fullscreen();if(e.key==='?')openGuide();});addEventListener('keyup',e=>keys.delete(e.code));function clearInput(){keys.clear();dive=0;release();}addEventListener('blur',clearInput);addEventListener('pagehide',saveSettings);document.addEventListener('visibilitychange',()=>{saveSettings();clearInput();wake();cancelAnimationFrame(raf);if(!document.hidden&&loadStage&&!gl.isContextLost())raf=requestAnimationFrame(tick);});
+document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key)};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>keys.delete(b.dataset.key);b.oncontextmenu=e=>e.preventDefault();});
+function saveSettings(){try{localStorage.setItem('foldspace-settings-v1',JSON.stringify({world,worldRevision:10,speed:flightSpeed,detail:Number($('detail').value),fog:fogDistance(),quality:$('quality').value,repeat:$('repeat').checked,hidden:document.body.classList.contains('minimal'),camera:{pos:[...pos],yaw,pitch}}));}catch{}}
+function restoreSettings(){try{const v=JSON.parse(localStorage.getItem('foldspace-settings-v1')||'null');if(!v||typeof v!=='object')return;if(Number.isInteger(v.world)&&v.world>=0&&v.world<worlds.length)selectWorld(v.world);if(typeof v.speed==='number'&&Number.isFinite(v.speed)){flightSpeed=Math.max(.1,Math.min(10,v.speed));$('speed').value=flightSpeed.toFixed(1);$('speedValue').textContent=flightSpeed.toFixed(1)+'×';}if(Number.isInteger(v.detail)&&v.detail>=0&&v.detail<=4){$('detail').value=String(v.detail);$('detailValue').textContent=['Light','Standard','Deep','Deeper','Maximum'][v.detail];}if(typeof v.fog==='number'&&Number.isFinite(v.fog)){$('fog').value=String(v.fog);showFog();}if(['auto','low','high','ultra'].includes(v.quality))$('quality').value=v.quality;if(typeof v.repeat==='boolean')$('repeat').checked=v.repeat;if((v.world!==3||v.worldRevision===10)&&v.camera&&Array.isArray(v.camera.pos)&&v.camera.pos.length===3&&v.camera.pos.every(x=>typeof x==='number'&&Number.isFinite(x)&&Math.abs(x)<1e5)&&Number.isFinite(v.camera.yaw)&&Number.isFinite(v.camera.pitch)){pos=[...v.camera.pos];yaw=v.camera.yaw;pitch=Math.max(-1.54,Math.min(1.54,v.camera.pitch));}if(v.hidden===true)toggleUI();}catch{}}
 function toggleUI(){document.body.classList.toggle('minimal');const hidden=document.body.classList.contains('minimal');$('toggleUI').setAttribute('aria-pressed',String(hidden));const label=hidden?'Show interface':'Hide interface';$('toggleUI').setAttribute('aria-label',label);$('toggleUI').title=label+' (H)';saveSettings();}
+function isFullscreenActive(){if(document.fullscreenElement)return true;const slack=Math.max(screen.width,screen.height)*.015;return innerHeight>=screen.height-slack&&innerWidth>=screen.width-slack;}
+function updateFullscreenButton(){const active=isFullscreenActive(),label=active?'Exit fullscreen':'Enter fullscreen';$('fullscreen').setAttribute('aria-label',label);$('fullscreen').title=label+' (F)';$('fullscreen').setAttribute('aria-pressed',String(active));}
 async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{tell('Fullscreen is unavailable in this browser view.');}}
-document.addEventListener('fullscreenchange',()=>{const active=!!document.fullscreenElement,label=active?'Exit fullscreen':'Enter fullscreen';$('fullscreen').setAttribute('aria-label',label);$('fullscreen').title=label+' (F)';$('fullscreen').setAttribute('aria-pressed',String(active));});
+document.addEventListener('fullscreenchange',updateFullscreenButton);addEventListener('resize',updateFullscreenButton);
 function setSpeed(value){flightSpeed=Math.max(.1,Math.min(10,value));$('speed').value=flightSpeed.toFixed(1);$('speedValue').textContent=Number($('speed').value).toFixed(1)+'×';tell('Flight speed '+$('speedValue').textContent);saveSettings();}
-function openGuide(){clearInput();paused=true;$('guide').showModal();}$('guide').addEventListener('close',()=>{paused=false;lastDraw=0;lastTime=0;canvas.focus({preventScroll:true});});$('help').onclick=openGuide;$('closeGuide').onclick=()=>$('guide').close();$('toggleUI').onclick=toggleUI;$('fullscreen').onclick=fullscreen;$('reset').onclick=()=>{reset();tell('Back at the starting view');};$('capture').onclick=renderImage;$('speed').oninput=()=>setSpeed(+$('speed').value);$('detail').oninput=()=>{$('detailValue').textContent=['Light','Standard','Deep','Deeper','Maximum'][+$('detail').value];saveSettings();};$('repeat').onchange=()=>{reset();tell($('repeat').checked?'Repeating space enabled':'Exploring a single fractal');saveSettings();};$('quality').onchange=()=>{avgMs=33.3;adjustAt=performance.now();saveSettings();};
+function openGuide(){clearInput();paused=true;$('guide').showModal();}$('guide').addEventListener('close',()=>{paused=false;wake();canvas.focus({preventScroll:true});});$('help').onclick=openGuide;$('closeGuide').onclick=()=>$('guide').close();$('toggleUI').onclick=toggleUI;$('fullscreen').onclick=fullscreen;$('reset').onclick=()=>{reset();tell('Back at the starting view');};$('capture').onclick=renderImage;$('speed').oninput=()=>setSpeed(+$('speed').value);$('detail').oninput=()=>{$('detailValue').textContent=['Light','Standard','Deep','Deeper','Maximum'][+$('detail').value];saveSettings();};$('fog').oninput=()=>{showFog();saveSettings();};$('repeat').onchange=()=>{reset();tell($('repeat').checked?'Repeating space enabled':'Exploring a single fractal');saveSettings();};$('quality').onchange=()=>{avgMs=33.3;adjustAt=performance.now();saveSettings();};
 
 restoreSettings();
 
@@ -360,9 +424,9 @@ function checkPrecision(){
   let point=[3.1,.73,2.9],dir=norm(point.map(x=>-x));
   for(let i=0;i<600;i++){const d=distance(point);if(d<1e-10)break;point=point.map((x,j)=>x+dir[j]*d*.7);}
   const offset=[3e-10,-2e-10,1e-10],expected=[distance(point),distance(point.map((x,j)=>x+offset[j]))];
-  const shader=$('sceneShader').textContent.split('void main(){')[0]+`void main(){float d=field(gl_FragCoord.x<1.?vec3(0.):vec3(3e-10,-2e-10,1e-10)).x;if(gl_FragCoord.x>2.)d=val(subd(da(vec2(1.,0.),ds(3e-10)),ds(1.)));if(gl_FragCoord.x>3.)d=val(subd(dm(vec2(1.,3e-10),vec2(1.,3e-10)),ds(1.)));uint bits=floatBitsToUint(d);frag=vec4(float(bits&255u),float((bits>>8)&255u),float((bits>>16)&255u),float((bits>>24)&255u))/255.;}`;
-  testProgram=program('sceneShader',shader);t=target(4,1);bindTarget(t);gl.useProgram(testProgram.p);gl.disable(gl.DITHER);
-  uniform(testProgram,'roundMask','1ui',4294967295);uniform(testProgram,'eye','3fv',point);uniform(testProgram,'eyeLow','3fv',point.map(x=>x-Math.fround(x)));uniform(testProgram,'world','1i',0);uniform(testProgram,'iterations','1i',48);uniform(testProgram,'period','1f',12);uniform(testProgram,'repeating','1i',$('repeat').checked?1:0);uniform(testProgram,'preciseMode','1i',1);
+  const shader=sceneSource(0,true).split('void main(){')[0]+`void main(){float d=field(gl_FragCoord.x<1.?vec3(0.):vec3(3e-10,-2e-10,1e-10)).x;if(gl_FragCoord.x>2.)d=val(subd(da(vec2(1.,0.),ds(3e-10)),ds(1.)));if(gl_FragCoord.x>3.)d=val(subd(dm(vec2(1.,3e-10),vec2(1.,3e-10)),ds(1.)));uint bits=floatBitsToUint(d);frag=vec4(float(bits&255u),float((bits>>8)&255u),float((bits>>16)&255u),float((bits>>24)&255u))/255.;}`;
+  testProgram=program(shader);t=target(4,1);bindTarget(t);gl.useProgram(testProgram.p);gl.disable(gl.DITHER);
+  uniform(testProgram,'roundMask','1ui',4294967295);uniform(testProgram,'eye','3fv',point);uniform(testProgram,'eyeLow','3fv',point.map(x=>x-Math.fround(x)));uniform(testProgram,'iterations','1i',48);uniform(testProgram,'period','1f',12);uniform(testProgram,'repeating','1i',$('repeat').checked?1:0);
   gl.drawArrays(gl.TRIANGLES,0,3);const bytes=new Uint8Array(16);gl.readPixels(0,0,4,1,gl.RGBA,gl.UNSIGNED_BYTE,bytes);const data=new DataView(bytes.buffer),actual=[data.getFloat32(0,true),data.getFloat32(4,true)];
   const error=Math.max(...actual.map((x,i)=>Math.abs(x-expected[i])/Math.max(expected[i],1e-13)));
   const passed=actual.every(Number.isFinite)&&error<.05&&Math.abs(actual[1]-actual[0])>1e-13;

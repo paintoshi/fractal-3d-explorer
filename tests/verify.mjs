@@ -87,7 +87,7 @@ assert.ok(Math.abs(api.distance([.3,2.2,.7])-api.distance([4.3,2.2,-7.3]))<1e-10
 assert.ok(api.distance([.3,6.2,.7])>api.distance([.3,2.2,.7])+3,'Blockworld does not repeat vertically');
 api.reset();
 const blockStart=diag().position;
-for(let i=0;i<200;i++){press('KeyE');api.move(.05);}release('KeyE');
+for(let i=0;i<200;i++){press('KeyQ');api.move(.05);}release('KeyQ');
 assert.ok(diag().position[1]>blockStart[1]+2,'Flying up in Blockworld is never wrapped back down');
 api.reset();
 savedSettings.set('foldspace-settings-v1',JSON.stringify({world:3,camera:{pos:[.3,.45,.3],yaw:1,pitch:0}}));
@@ -96,9 +96,9 @@ assert.ok(separation(diag().position,blockStart)<1e-12,'Legacy world camera rese
 api.setPos([2,3,1]);api.saveSettings();api.reset();api.restoreSettings();
 assert.ok(separation(diag().position,[2,3,1])<1e-12,'New Blockworld camera persists');
 api.selectWorld(0);let before=diag().position;
-press('KeyE');api.move(.05);release('KeyE');let after=diag().position;
-assert.ok(after[1]>before[1]);assert.ok(Math.abs(after[0]-before[0])<1e-10&&Math.abs(after[2]-before[2])<1e-10,'E is world-vertical');
-api.reset();before=diag().position;press('KeyQ');api.move(.05);release('KeyQ');assert.ok(diag().position[1]<before[1]);
+press('KeyQ');api.move(.05);release('KeyQ');let after=diag().position;
+assert.ok(after[1]>before[1],'Q flies up');assert.ok(Math.abs(after[0]-before[0])<1e-10&&Math.abs(after[2]-before[2])<1e-10,'Q is world-vertical');
+api.reset();before=diag().position;press('KeyE');api.move(.05);release('KeyE');assert.ok(diag().position[1]<before[1],'E flies down');
 api.reset();before=diag().position;element('view').listeners.wheel({deltaY:-120,deltaMode:0,preventDefault(){}});api.move(.033);assert.ok(separation(before,diag().position)<1e-10,'Scroll does not move the camera');assert.ok(Number(element('speed').value)>1,'Scroll increases speed');for(let i=0;i<80;i++)element('view').listeners.wheel({deltaY:-120,deltaMode:0,preventDefault(){}});assert.equal(Number(element('speed').value),10,'Speed caps at 10x');for(let i=0;i<80;i++)element('view').listeners.wheel({deltaY:120,deltaMode:0,preventDefault(){}});assert.equal(Number(element('speed').value),.1,'Speed floors at 0.1x');element('speed').value='1';
 api.reset();element('detail').value='0';api.move(.033);const shallow=diag().iterations;element('detail').value='4';api.move(.033);assert.ok(diag().iterations>shallow,'Depth increases iteration budget');element('detail').value='1';
 const priorYaw=diag().yaw;element('view').listeners.pointerdown({button:0,pointerId:1,clientX:100,clientY:100});element('view').listeners.pointermove({clientX:200,clientY:120});assert.notEqual(diag().yaw,priorYaw);element('view').listeners.pointerup();
@@ -108,6 +108,9 @@ for(const quality of ['low','high','ultra','auto']){element('quality').value=qua
 document.hidden=true;const hiddenDraws=draws;api.tick(2000);assert.equal(draws,hiddenDraws,'Hidden tab pauses rendering');document.hidden=false;
 for(let t=2034;t<6034;t+=1000/75)api.tick(t);
 assert.ok(diag().fps>27&&diag().fps<33,'Frame pacing remains near 30 on a 75 Hz display');
+const idleDraws=draws;for(let t=6034;t<7034;t+=1000/60)api.tick(t);assert.equal(draws,idleDraws,'A stationary view is not redrawn');
+press('KeyW');api.tick(7100);release('KeyW');assert.ok(draws>idleDraws,'Movement wakes the renderer');
+element('fog').value='2.4';api.saveSettings();element('fog').value='1';api.restoreSettings();assert.equal(element('fog').value,'2.4','Fog distance persists');element('fog').value='1';
 assert.ok(!/<script[^>]+src=|<link[^>]+rel=["']stylesheet["'][^>]+href=/i.test(html),'Standalone with no external scripts or styles');
 context.setTimeout=fn=>{queueMicrotask(fn);return 0;};
 const render=api.renderImage();assert.equal(element('renderDialog').open,true);element('cancelRender').onclick();await render;assert.equal(element('renderDialog').open,false,'Cancel closes render dialog');assert.equal(textures,3,'Cancelled render releases temporary textures');assert.equal(framebuffers,3,'Cancelled render releases temporary framebuffers');
