@@ -61,6 +61,10 @@ uniform highp uint roundMask;
 uniform int iterations,steps,shadingSamples;
 uniform float epsilon,period,detailBias,fogScale;
 uniform bool repeating;
+// lengthScale converts world-unit shading lengths into march units; invViewScale maps back.
+uniform float lengthScale,invViewScale;
+uniform bool coarsePass,useCoarse;
+uniform highp sampler2D coarseDepth;
 // Blockworld repeats horizontally only, so it stays a single layer of terrain.
 vec3 wrapPoint(vec3 p){if(!repeating)return p;vec3 q=mod(p+period*.5,period)-period*.5;return world==3?vec3(q.x,p.y,q.z):q;}
 float maxComponent(vec3 a){return max(a.x,max(a.y,a.z));}
@@ -74,9 +78,6 @@ vec2 fastField(vec3 pp){
  }else if(world==0){
   for(int i=0;i<min(iterations,64);i++){z=clamp(z,-1.,1.)*2.-z;float k=clamp(1./max(dot(z,z),1e-9),1.,4.);z*=k;dr*=k;z=z*(-1.8)+p;dr=dr*1.8+1.;trap=min(trap,dot(z,z));if(dr>1e26)break;}
   d=length(z)/dr;trap=sqrt(trap);
- }else if(world==1){
-  z=p/1.6;vec3 a=abs(z)-1.;d=max(a.x,max(a.y,a.z));float s=1.;
-  for(int i=0;i<min(iterations,22);i++){vec3 a=mod(z*s,2.)-1.;s*=3.;vec3 r=abs(1.-3.*abs(a));float c=(min(max(r.x,r.y),min(max(r.y,r.z),max(r.z,r.x)))-1.)/s;d=max(d,c);trap=min(trap,dot(r,r));}d*=1.6;trap=sqrt(trap);
  }else if(world==2){
   float r=0.;
   for(int i=0;i<min(iterations,64);i++){r=length(z);trap=min(trap,r);if(r>3.)break;if(r<1e-8){z=p;continue;}float theta=acos(clamp(z.z/r,-1.,1.))*8.;float phi=atan(z.y,z.x)*8.;float r2=r*r,r4=r2*r2,r7=r4*r2*r;dr=r7*8.*dr+1.;z=r7*r*vec3(sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta))+p;}
@@ -100,7 +101,6 @@ vec2 dv(vec2 a,vec2 b){float q=a.x/b.x;vec2 r=subd(a,dm(b,ds(q)));return da(ds(q
 vec2 dab(vec2 a){return a.x<0.||(a.x==0.&&a.y<0.)?-a:a;}
 float val(vec2 a){return a.x+a.y;}
 bool lessd(vec2 a,vec2 b){return a.x<b.x||(a.x==b.x&&a.y<b.y);}
-vec2 mind(vec2 a,vec2 b){return lessd(a,b)?a:b;}
 vec2 maxd(vec2 a,vec2 b){return lessd(a,b)?b:a;}
 vec2 dsqrt(vec2 a){float q=sqrt(max(a.x,0.));if(q<1e-30)return ds(0.);return da(ds(q),ds(val(subd(a,dm(ds(q),ds(q))))/(2.*q)));}
 float dfloor(vec2 a){float n=floor(a.x);return n+floor((a.x-n)+a.y);}
@@ -124,9 +124,6 @@ vec2 preciseField(vec3 offset){
  D3 z=p;float dr=1.,trap=1e5,d=0.;
  if(world==0){
   for(int i=0;i<min(iterations,64);i++){z=fold3(z);vec2 r2=dot3(z);vec2 k=lessd(r2,ds(.25))?ds(4.):lessd(ds(1.),r2)?ds(1.):dv(ds(1.),r2);z=mul3(z,k);dr*=val(k);z=add3(mul3(z,vec2(-1.8,-4.7683715864721421e-08)),p);dr=dr*1.8+1.;trap=min(trap,sq(value3(z)));if(dr>1e26)break;}d=len3(z)/dr;trap=sqrt(trap);
- }else if(world==1){
-  z=mul3(p,ds(.625));vec3 a=value3(add3(abs3(z),from3(vec3(-1.))));d=max(a.x,max(a.y,a.z));float scale=1.;
-  for(int i=0;i<min(iterations,22);i++){D3 a=add3(mod3(mul3(z,ds(scale)),2.),from3(vec3(-1.)));scale*=3.;D3 r=abs3(add3(from3(vec3(1.)),mul3(abs3(a),ds(-3.))));vec2 cut=mind(maxd(r.x,r.y),mind(maxd(r.y,r.z),maxd(r.z,r.x)));float c=val(subd(cut,ds(1.)))/scale;d=max(d,c);trap=min(trap,sq(value3(r)));}d*=1.6;trap=sqrt(trap);
  }else if(world==3){
   for(int i=0;i<min(iterations,64);i++){z=fold3(z);D3 a=abs3(z);vec2 r=maxd(a.x,maxd(a.y,a.z));vec2 r2=dm(r,r);vec2 k=lessd(r2,ds(.25))?ds(4.):lessd(r2,ds(1.))?dv(ds(1.),r2):ds(1.);z=add3(mul3(z,dm(k,ds(-2.5))),p);dr=dr*val(k)*2.5+1.;trap=min(trap,val(r));if(dr>1e26)break;}
   D3 a=abs3(z);d=val(maxd(a.x,maxd(a.y,a.z)))/dr;
@@ -136,13 +133,36 @@ vec2 preciseField(vec3 offset){
  }
  return vec2(d,trap);
 }
-vec2 field(vec3 offset){return preciseMode?preciseField(offset):fastField(eye+offset);}
+// Menger sponge inside the current zoom frame (see mengerFrame in the script). Levels finer
+// than the frame use frame coordinates; the coarser levels already zoomed past arrive as
+// integer cell offsets, and adding the small camera-relative part last keeps them exact.
+uniform vec3 frameLocal;
+uniform vec4 frameBox,frameLevels[mengerSlots];
+uniform float framePeriod,frameTrap;
+uniform int frameLevelCount;
+vec3 signOf(vec3 v){return mix(vec3(1.),vec3(-1.),lessThan(v,vec3(0.)));}
+vec2 mengerField(vec3 offset){
+ vec3 t=frameLocal+offset,box=frameBox.xyz,hop=vec3(0.);
+ if(framePeriod>0.){hop=floor((box+t)/framePeriod+.5);box-=hop*framePeriod;}
+ vec3 s=signOf(box+t);float d=maxComponent(s*box-frameBox.w+s*t),trap=frameTrap,scale=1.;
+ // Each hop into a neighbouring repetition shifts the frame lattice by an odd number of cells.
+ vec3 z=t-hop;
+ for(int i=0;i<min(iterations,22);i++){vec3 a=mod(z*scale,2.)-1.;scale*=3.;vec3 r=abs(1.-3.*abs(a));d=max(d,(min(max(r.x,r.y),min(max(r.y,r.z),max(r.z,r.x)))-1.)/scale);trap=min(trap,dot(r,r));}
+ for(int i=0;i<mengerSlots;i++){
+  if(i>=frameLevelCount)break;
+  float h=frameLevels[i].w;vec3 w=frameLevels[i].xyz-hop*3.*h;w-=6.*h*floor((w+t)/(6.*h)+.5);
+  vec3 s1=signOf(w+t),b=s1*w-2.*h,s2=signOf(b+s1*t),e=s2*b-h+s2*s1*t,r=(e+h)/h;
+  d=max(d,min(max(e.x,e.y),min(max(e.y,e.z),max(e.z,e.x))));trap=min(trap,dot(r,r));
+ }
+ return vec2(d,sqrt(trap));
+}
+vec2 field(vec3 offset){return world==1?mengerField(offset):preciseMode?preciseField(offset):fastField(eye+offset);}
 
 float de(vec3 p){return field(p).x;}
 vec3 normalAt(vec3 p,float e){vec3 n=vec3(0.);for(int i=0;i<min(shadingSamples,4);i++){vec3 k=i==0?vec3(1,-1,-1):i==1?vec3(-1,-1,1):i==2?vec3(-1,1,-1):vec3(1,1,1);n+=k*de(p+k*e);}return n/max(length(n),1e-30);}
 // Short soft-shadow march toward the light; keeps solid foreground forms readable.
 float sunVisibility(vec3 p,vec3 n,vec3 l,float hitE,float t){
- float visibility=1.;float h=max(hitE*8.,min(t*.025,.025));
+ float visibility=1.;float h=max(hitE*8.,min(t*.025,.025*lengthScale));
  for(int j=1;j<=min(shadingSamples,4);j++){float travel=h*float(j*j);visibility=min(visibility,clamp(de(p+n*hitE*4.+l*travel)*5./travel,0.,1.));}
  return visibility;
 }
@@ -153,13 +173,20 @@ float softShadow(vec3 p,vec3 l,float start,float reach){
  return smoothstep(0.,1.,clamp(visibility,0.,1.));
 }
 void main(){
- vec2 q=(gl_FragCoord.xy+tileOrigin-.5*resolution)/resolution.y;vec3 rd=normalize(forward+q.x*right*1.24+q.y*up*1.24);
+ // A coarse pass pixel stands for a coneBlock x coneBlock block of full-resolution pixels.
+ vec2 pixel=coarsePass?gl_FragCoord.xy*float(coneBlock):gl_FragCoord.xy;
+ vec2 q=(pixel+tileOrigin-.5*resolution)/resolution.y;vec3 rd=normalize(forward+q.x*right*1.24+q.y*up*1.24);
  // The Mandelbox sun sits behind the starting view so the first look is backlit.
  vec3 l=normalize(world==0?vec3(-.7,1.,-.5):vec3(.7,1.,.5));
  float t=0.,d=0.,glow=0.,hitE=epsilon;vec2 sampleF;bool hit=false;
+ // The coarse ray stops once its cone, wide enough to hold every ray of its block, could
+ // touch a surface; those full-resolution rays then skip the empty space before that point.
+ float cone=coarsePass?1.1*.7072*float(coneBlock)*1.24/resolution.y:0.;
+ if(useCoarse){vec2 start=texelFetch(coarseDepth,ivec2(gl_FragCoord.xy)/coneBlock,0).xy;t=start.x;glow=start.y;}
  // Thinner fog reveals more distance, so the march must reach further before giving up.
- float farPlane=(repeating?(world==3?22.:period*3.):35.)*max(1.,fogScale);
- for(int i=0;i<min(steps,480);i++){vec3 p=rd*t;sampleF=field(p);d=sampleF.x;hitE=max(epsilon,t*detailBias/resolution.y);if(world==1)glow+=exp(-abs(d)*15.)*.006;if(d<hitE){hit=true;break;}t+=max(d*.7,hitE*.3);if(t>farPlane)break;}
+ float farPlane=(repeating?(world==3?22.:period*3.):35.)*max(1.,fogScale)*lengthScale;
+ for(int i=0;i<min(steps,480);i++){if(t>farPlane)break;vec3 p=rd*t;sampleF=field(p);d=sampleF.x;hitE=max(epsilon,t*detailBias/resolution.y);if(world==1)glow+=exp(-abs(d)*15./lengthScale)*.006;if(d<max(hitE,2.*cone*(t+d))){hit=true;break;}t+=max(d*.7,hitE*.3);}
+ if(coarsePass){frag=vec4(t,glow,0,1);return;}
  vec3 fog=fogColor;vec3 atmosphere;
  if(world==3){
   float sun=pow(max(dot(rd,l),0.),24.);
@@ -169,9 +196,9 @@ void main(){
  if(hit){
   vec3 p=rd*t;vec3 n=normalAt(p,hitE*1.8);float dif=max(dot(n,l),0.);float back=max(dot(n,-l),0.);float ao=0.;
   for(int j=1;j<=min(shadingSamples,4);j++){float h=world==4?max(hitE*5.,min(t*.045,.045))*float(j*j):hitE*float(j)*5.;ao+=(h-de(p+n*h))/h*.14;}ao=clamp(1.-ao,.15,1.);
-  float material=.5+.5*sin(log(1.+sampleF.y)*8.+dot(wrapPoint(eye+p),vec3(1.7,2.3,1.1)));vec3 base=mix(colorA,colorB,smoothstep(.28,.72,material));
+  float material=.5+.5*sin(log(1.+sampleF.y)*8.+dot(wrapPoint(eye+p*invViewScale),vec3(1.7,2.3,1.1)));vec3 base=mix(colorA,colorB,smoothstep(.28,.72,material));
   float spec=pow(max(dot(n,normalize(l-rd)),0.),38.);float rim=pow(1.-max(dot(n,-rd),0.),3.);
-  float visibility=world==1?softShadow(p+n*hitE*4.,l,max(hitE*6.,.004),2.4):sunVisibility(p,n,l,hitE,t);
+  float visibility=world==1?softShadow(p+n*hitE*4.,l,max(hitE*6.,.004*lengthScale),2.4*lengthScale):sunVisibility(p,n,l,hitE,t);
   // Sky from above, dimmer bounce from below: shadowed faces keep their shape.
   float sky=.5+.5*n.y,sunlit=dif*mix(.1,1.,visibility);
   if(world==4){
@@ -202,7 +229,7 @@ void main(){
    col=base*(.9*sunlit+vec3(.08,.16,.2)*(.4+.6*sky)*ao+.05*back)*pow(ao,1.2);
    col+=mix(base,vec3(1.),.3)*spec*.3*visibility+base*rim*.16*ao;
   }
-  float ft=t/fogScale;
+  float ft=t/(fogScale*lengthScale);
   float mist=(world==0||world==2)?1.-exp(-pow(max(ft-period*.25,0.)/(period*.85),2.)):(world==3)?1.-exp(-pow(ft/8.,2.)):(world==4)?1.-exp(-pow(ft/(period*2.),2.)):1.-exp(-pow(ft/(period*.8),1.6));col=mix(col,atmosphere,mist);
  }
  if(world==1)col+=glowColor*min(glow,.9)*.05;col=1.-exp(-col*1.55);col=pow(max(col,0.),vec3(.4545));frag=vec4(col,1.);
@@ -231,19 +258,35 @@ void main(){
 const $=id=>document.getElementById(id), canvas=$('view');
 const icons=[ '<path d="m17 2 14 8v16l-14 8L3 26V10Z M3 10l14 8 14-8 M17 18v16 M10 14v8l7 4 7-4v-8"/>','<path d="M3 3h28v28H3Z M11 3v28M23 3v28M3 11h28M3 23h28 M11 11h12v12H11Z"/>','<path d="M17 3c8-5 15 5 10 10 10 5 5 16-2 14-4 10-15 7-15 0C0 28-3 17 5 13 0 5 10-1 17 3Z M17 10c8 0 10 13 0 14-10-1-8-14 0-14Z"/>','<path d="M2 32h30 M2 32V21h8v-7h8V5h8v11h6v16 M10 21v11 M18 14v18 M26 16v16 M2 25h30"/>','<path d="m17 2 6 9 9 6-9 6-6 11-6-11-9-6 9-6Z M17 9l8 8-8 10-8-10Z M17 2v7m15 8h-7M17 27v7M2 17h7"/>' ];
 const worlds=[
- {name:'Mandelbox',tag:'Folded architectural infinity',title:'The buried cathedral',formula:'Box folds / sphere inversions',description:'Ancient geometry, half-lost in the sandstorm.',accent:[.93,.64,.35],a:[.48,.115,.024],b:[.018,.03,.055],fog:[.27,.12,.035],glow:[.4,.09,.012],period:12,pos:[4.6,2.6,5.8],target:[0,0,0],it:15},
- {name:'Menger sponge',tag:'A labyrinth within a labyrinth',title:'The infinite lattice',formula:'Recursive cubic subtraction',description:'Passages within passages. Follow the light through.',accent:[.2,.88,.94],a:[.025,.64,.72],b:[.02,.36,.48],fog:[.004,.024,.03],glow:[.2,.9,1],period:8,pos:[3.1,2.2,3.8],target:[0,0,0],it:6},
- {name:'Mandelbulb',tag:'Organic, otherworldly detail',title:'The midnight reef',formula:'Spherical power-8 iteration',description:'Dark coral forms, fading into the blue.',accent:[.22,.68,.83],a:[.005,.17,.22],b:[.008,.025,.13],fog:[.018,.05,.13],glow:[.01,.15,.14],period:4.8,pos:[2.1,1.15,2.3],target:[0,0,0],it:12},
- {name:'Blockworld',tag:'Voxel-like fractal terrain',title:'The endless blocklands',formula:'Box folds / cube inversions',description:'Grassy terraces and stepped canyons, all from one folding rule.',accent:[.55,.82,.36],a:[.16,.14,.09],b:[.1,.27,.05],fog:[.34,.28,.4],period:4,pos:[.2,2.9,1.6],target:[1.3,1.85,-1.8],it:12},
- {name:'Kleinian tunnels',tag:'Passages within passages',title:'The velvet labyrinth',formula:'Box inversion / cylindrical passages',description:'Cobalt vaults and crimson threads. Follow the spaces between.',accent:[.32,.55,1],a:[.008,.018,.8],b:[.55,.004,.012],fog:[.015,.11,.15],period:4,pos:[1.3,.9,1.5],target:[0,0,0],it:12}
+ {name:'Mandelbox',tag:'Folded architectural infinity',title:'The buried cathedral',formula:'Box folds / sphere inversions',description:'Ancient geometry, half-lost in the sandstorm.',accent:[.93,.64,.35],a:[.48,.115,.024],b:[.018,.03,.055],fog:[.27,.12,.035],glow:[.4,.09,.012],period:12,pos:[4.6,2.6,5.8],target:[0,0,0],it:15,rate:3},
+ {name:'Menger sponge',tag:'A labyrinth within a labyrinth',title:'Infinite lattice',formula:'Recursive cubic subtraction',description:'Passages within passages. Follow the light through.',accent:[.2,.88,.94],a:[.025,.64,.72],b:[.02,.36,.48],fog:[.004,.024,.03],glow:[.2,.9,1],period:8,pos:[3.1,2.2,3.8],target:[0,0,0],it:7,rate:1/Math.log10(3)},
+ {name:'Mandelbulb',tag:'Organic, otherworldly detail',title:'The midnight reef',formula:'Spherical power-8 iteration',description:'Dark coral forms, fading into the blue.',accent:[.22,.68,.83],a:[.005,.17,.22],b:[.008,.025,.13],fog:[.018,.05,.13],glow:[.01,.15,.14],period:4.8,pos:[2.1,1.15,2.3],target:[0,0,0],it:12,rate:2.5},
+ {name:'Blockworld',tag:'Voxel-like fractal terrain',title:'Endless blocklands',formula:'Box folds / cube inversions',description:'Grassy terraces and stepped canyons, all from one folding rule.',accent:[.55,.82,.36],a:[.16,.14,.09],b:[.1,.27,.05],fog:[.34,.28,.4],period:4,pos:[.2,2.9,1.6],target:[1.3,1.85,-1.8],it:12,rate:2.5},
+ {name:'Kleinian tunnels',tag:'Passages within passages',title:'The velvet labyrinth',formula:'Box inversion / cylindrical passages',description:'Cobalt vaults and crimson threads. Follow the spaces between.',accent:[.32,.55,1],a:[.008,.018,.8],b:[.55,.004,.012],fog:[.015,.11,.15],period:4,pos:[1.3,.9,1.5],target:[0,0,0],it:12,rate:2.5}
 ];
+// Iterations added per tenfold zoom (rate) follow how fast each formula's derivative grows per
+// step near its surface: roughly 2.2x for the Mandelbox, exactly 3x for the Menger sponge.
 let flightSpeed=1;
 let world=0,pos=[0,0,0],yaw=0,pitch=0,keys=new Set(),drag=false,lastX=0,lastY=0,dive=0,scale=.7,frame=0,lastTime=0,lastDraw=0,avgMs=33.3,adjustAt=0,rendering=false,renderCancelled=false,nearest=1,paused=false,raf=0,toastTimer;
-let gl,blur,post,targets=[],w=0,h=0,iterations=15;
+let gl,blur,post,targets=[],w=0,h=0,iterations=15,floatTargets=false;
+// Each coarse-pass texel covers this many full-resolution pixels per side.
+const CONE_BLOCK=8;
+// Menger zoom frames. The sponge is exactly self-similar, so its camera lives in a stack of nested
+// sub-cubes: every digit picks one of 27 children (-1, 0 or 1 per axis), and `local` is the position
+// inside the innermost cube, scaled to [-1, 1]. Diving pushes a digit and backing out pops it, so
+// the numbers the GPU sees stay near 1 at any depth.
+const MENGER_SLOTS=16,MENGER_MAX_LEVEL=600,ORIGIN=[0,0,0];
+// Coarse levels wider than MENGER_LIMIT are swapped for a copy of that size which matches within
+// MENGER_REACH of the camera, so every offset stays an exact float32 integer.
+const MENGER_LIMIT=3**13,MENGER_REACH=2e5;
+// Past this zoom, shading lengths follow the camera's scale instead of world units, so fog and
+// shadows neither vanish nor jump when a zoom frame changes.
+const SHADING_ZOOM=3000;
+let menger={level:0,cell:[0,0,0],digits:[],local:[0,0,0]},mengerCache=null;
 const norm=v=>{const l=Math.hypot(...v)||1;return v.map(x=>x/l)};
 function basis(){const f=[Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)],r=[-Math.cos(yaw),0,Math.sin(yaw)];return {f,r,u:[-Math.sin(yaw)*Math.sin(pitch),Math.cos(pitch),-Math.cos(yaw)*Math.sin(pitch)]};}
 function tell(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2800);}
-function reset(){const v=worlds[world];pos=[...v.pos];const f=norm(v.target.map((x,i)=>x-pos[i]));yaw=Math.atan2(f[0],f[2]);pitch=Math.asin(f[1]);dive=0;keys.clear();nearest=1;}
+function reset(){const v=worlds[world];pos=[...v.pos];const f=norm(v.target.map((x,i)=>x-pos[i]));yaw=Math.atan2(f[0],f[2]);pitch=Math.asin(f[1]);dive=0;keys.clear();nearest=1;if(world===1)setMenger(mengerFromWorld(pos));}
 function selectWorld(i){world=i;reset();const v=worlds[i];$('title').textContent=v.title;$('formula').textContent=v.formula;$('description').textContent=v.description;document.documentElement.style.setProperty('--accent',`rgb(${(v.accent||v.a).map(x=>Math.round(x*255)).join(',')})`);document.querySelectorAll('.world').forEach((b,j)=>b.setAttribute('aria-pressed',String(i===j)));iterations=v.it;}
 worlds.forEach((v,i)=>{const b=document.createElement('button');b.className='world';b.style.setProperty('--swatch',`rgb(${(v.accent||v.a).map(x=>x*255).join(',')})`);b.innerHTML=`<span class="mark"><svg viewBox="0 0 34 36" aria-hidden="true">${icons[i]}</svg></span><span><strong>${v.name}</strong><small>${v.tag}</small></span><span class="dot"></span>`;b.onclick=()=>{selectWorld(i);saveSettings();};$('worlds').append(b);});selectWorld(0);
 // Blockworld repeats horizontally only; its height axis never wraps.
@@ -253,11 +296,84 @@ function showFog(){$('fogValue').textContent=fogDistance().toFixed(1)+'×';}
 // CPU mirror: only a few point queries per frame for scale-aware, conservative flight.
 function distance(pp){const v=worlds[world],period=v.period;let p=pp.map((x,i)=>wraps(i)?((x+period*.5)%period+period)%period-period*.5:x),z=[...p],dr=1,d=0,its=iterations;
  if(world===0){for(let i=0;i<its;i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);let k=Math.max(1,Math.min(4,1/Math.max(z.reduce((a,x)=>a+x*x,0),1e-9)));z=z.map((x,j)=>x*k*-1.8+p[j]);dr=dr*k*1.8+1;if(dr>1e26)break;}return Math.hypot(...z)/dr;}
- if(world===1){z=p.map(x=>x/1.6);d=Math.max(...z.map(x=>Math.abs(x)-1));let s=1;for(let i=0;i<Math.min(its,22);i++){let a=z.map(x=>((x*s)%2+2)%2-1);s*=3;let r=a.map(x=>Math.abs(1-3*Math.abs(x)));d=Math.max(d,(Math.min(Math.max(r[0],r[1]),Math.max(r[1],r[2]),Math.max(r[2],r[0]))-1)/s);}return d*1.6;}
+ if(world===1){const state=mengerFromWorld(pp);return mengerField(mengerFrame(state),state.local,ORIGIN)*1.6;}
  if(world===2){for(let i=0;i<its;i++){let r=Math.hypot(...z);if(r>3)break;if(r<1e-8){z=[...p];continue;}let theta=Math.acos(Math.max(-1,Math.min(1,z[2]/r)))*8,phi=Math.atan2(z[1],z[0])*8,r7=r**7;dr=r7*8*dr+1;z=[Math.sin(theta)*Math.cos(phi),Math.sin(theta)*Math.sin(phi),Math.cos(theta)].map((x,j)=>x*r7*r+p[j]);}let r=Math.hypot(...z);return .5*Math.log(Math.max(r,1.00001))*r/dr;}
  if(world===3){for(let i=0;i<its;i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);const r=Math.max(...z.map(Math.abs)),rr=r*r,k=rr<.25?4:rr<1?1/rr:1;z=z.map((x,j)=>x*k*-2.5+p[j]);dr=dr*k*2.5+1;if(dr>1e26)break;}return Math.max(...z.map(Math.abs))/dr;}
  for(let i=0;i<Math.min(its,48);i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);let k=Math.max(1.2/Math.max(z.reduce((a,x)=>a+x*x,0),1e-12),1);z=z.map(x=>x*k);dr*=k;if(dr>1e26)break;}return .3*Math.abs(Math.min(Math.hypot(z[0],z[1]),Math.hypot(z[1],z[2]),Math.hypot(z[0],z[2]))-.22)/dr;
 }
+function mengerFromWorld(p){let u=p.map(x=>x/1.6);if($('repeat').checked)u=u.map(x=>x-5*Math.floor((x+2.5)/5));const cell=u.map(x=>Math.round(x/2));return {level:0,cell,digits:[],local:u.map((x,i)=>x-2*cell[i])};}
+function mengerWorld(){let size=1,u=menger.cell.map(x=>2*x);for(const d of menger.digits){size/=3;u=u.map((x,i)=>x+2*d[i]*size);}return u.map((x,i)=>(x+menger.local[i]*size)*1.6);}
+function setMenger(state){menger=state;mengerCache=null;pos=mengerWorld();}
+// Shrinks a coarse level (h is a third of its cell, r the camera's offset from the cell centre,
+// both in frame units) to MENGER_LIMIT, keeping each axis's offset from the nearest centre,
+// wall, fold or cell edge, which is all the view can reach.
+function mengerCopy(r,h){
+ if(h<=BigInt(MENGER_LIMIT))return [...r.map(Number),Number(h)];
+ const reach=BigInt(MENGER_REACH);
+ return [...r.map(x=>{const a=x<0n?-x:x,sign=x<0n?-1:1;let k=(2n*a+h)/(2n*h);if(k>3n)k=3n;const offset=a-k*h;return offset>=-reach&&offset<=reach?sign*(Number(k)*MENGER_LIMIT+Number(offset)):a<h?0:2*MENGER_LIMIT;}),MENGER_LIMIT];
+}
+// Everything the shader needs for the current frame: the coarse levels that can still carve
+// within reach, the outer box, and the orbit trap of the levels that cannot.
+function mengerFrame(state){
+ const candidates=[],reach=BigInt(MENGER_REACH);let trap=1e5,r=[0n,0n,0n],h=1n;
+ const levelTrap=(e,size)=>e.reduce((sum,x)=>sum+((x+size)/size)**2,0);
+ for(let j=state.level-1;j>=0;j--){
+  r=r.map((x,a)=>x+2n*BigInt(state.digits[j][a])*h);
+  const level=mengerCopy(r,h),size=level[3],e=level.slice(0,3).map(x=>Math.abs(Math.abs(x)-2*size)-size);
+  // A level only carves where two axes are inside its middle third (|w| < size), so it
+  // matters only when two middle thirds are within reach; nearby cell edges never carve.
+  if(level.slice(0,3).filter(x=>Math.abs(x)-size<MENGER_REACH+2).length>=2)candidates.push({level,e,size,cut:Math.min(Math.max(e[0],e[1]),Math.max(e[1],e[2]),Math.max(e[2],e[0]))});
+  else trap=Math.min(trap,levelTrap(e,size));
+  h*=3n;
+ }
+ // Only a camera inside a huge hole (about to leave the frame) can exceed the slots; keep what carves most.
+ if(candidates.length>MENGER_SLOTS)candidates.sort((a,b)=>b.cut-a.cut).splice(MENGER_SLOTS).forEach(c=>{trap=Math.min(trap,levelTrap(c.e,c.size));});
+ const levels=candidates.map(c=>c.level),centre=r.map((x,a)=>x+2n*BigInt(state.cell[a])*h),exact=h<=BigInt(MENGER_LIMIT);
+ const box=exact?[...centre.map(Number),Number(h)]:[...centre.map(x=>{const a=x<0n?-x:x,sign=x<0n?-1:1,offset=a-h;return offset>=-reach&&offset<=reach?sign*(MENGER_LIMIT+Number(offset)):a<h?0:2*MENGER_LIMIT;}),MENGER_LIMIT];
+ const slots=new Float32Array(MENGER_SLOTS*4);levels.forEach((level,i)=>slots.set(level,i*4));
+ return {levels,slots,box,period:exact&&$('repeat').checked?5*Number(h):0,trap};
+}
+const mengerCurrent=()=>mengerCache||(mengerCache=mengerFrame(menger));
+// CPU mirror of the shader's mengerField, in frame units.
+function mengerField(frame,local,offset){
+ const t=local.map((x,i)=>x+offset[i]),{box,period}=frame,hop=t.map((x,i)=>period?Math.floor((box[i]+x)/period+.5):0);
+ let d=-Infinity,scale=1;
+ for(let i=0;i<3;i++){const w=box[i]-hop[i]*period,s=w+t[i]<0?-1:1;d=Math.max(d,s*w-box[3]+s*t[i]);}
+ const z=t.map((x,i)=>x-hop[i]);
+ for(let i=0;i<Math.min(iterations,22);i++){const r=z.map(x=>Math.abs(1-3*Math.abs(((x*scale)%2+2)%2-1)));scale*=3;d=Math.max(d,(Math.min(Math.max(r[0],r[1]),Math.max(r[1],r[2]),Math.max(r[2],r[0]))-1)/scale);}
+ for(const [x,y,zz,h] of frame.levels){const e=[x,y,zz].map((c,i)=>{let w=c-hop[i]*3*h;w-=6*h*Math.floor((w+t[i])/(6*h)+.5);const s1=w+t[i]<0?-1:1,b=s1*w-2*h,s2=b+s1*t[i]<0?-1:1;return s2*b-h+s2*s1*t[i];});d=Math.max(d,Math.min(Math.max(e[0],e[1]),Math.max(e[1],e[2]),Math.max(e[2],e[0])));}
+ return d;
+}
+function mengerDescend(){const d=menger.local.map(x=>Math.max(-1,Math.min(1,Math.round(x*1.5))));menger.digits.push(d);menger.local=menger.local.map((x,i)=>3*x-2*d[i]);menger.level++;mengerCache=null;}
+function mengerAscend(){const d=menger.digits.pop();menger.local=menger.local.map((x,i)=>(x+2*d[i])/3);menger.level--;mengerCache=null;}
+// Keeps the camera's surface distance between these frame-unit bounds; the gap avoids flip-flopping.
+function rescaleMenger(){let d=Math.abs(surfaceDistance());while(d<.03&&menger.level<MENGER_MAX_LEVEL){mengerDescend();d=Math.abs(surfaceDistance());}while(d>.3&&menger.level>0){mengerAscend();d=Math.abs(surfaceDistance());}}
+function shiftMenger(delta){
+ menger.local=menger.local.map((x,i)=>x+delta[i]);
+ for(let a=0;a<3;a++)while(Math.abs(menger.local[a])>1){
+  // Step into the neighbouring cube, carrying through the digits like an odometer.
+  const step=Math.sign(menger.local[a]);menger.local[a]-=2*step;mengerCache=null;let j=menger.level-1;
+  for(;j>=0;j--){const d=menger.digits[j];d[a]+=step;if(Math.abs(d[a])<=1)break;d[a]-=3*step;}
+  if(j<0)menger.cell[a]+=step;
+ }
+ pos=mengerWorld();
+ if(menger.level>0)return;
+ if($('repeat').checked){if(pos.some(x=>Math.abs(x)>4))setMenger(mengerFromWorld(pos));}
+ else if(Math.hypot(...pos)>100){setMenger(mengerFromWorld(norm(pos).map(x=>x*100)));tell('Turn on repeating space to keep exploring.');}
+}
+// One character per digit: its 27 children in x, y, z order.
+const MENGER_ALPHABET='abcdefghijklmnopqrstuvwxyzA';
+function serializeMenger(){return {level:menger.level,cell:[...menger.cell],local:[...menger.local],digits:menger.digits.map(d=>MENGER_ALPHABET[(d[0]+1)*9+(d[1]+1)*3+d[2]+1]).join('')};}
+function parseMenger(v){
+ if(!v||!Number.isInteger(v.level)||v.level<0||v.level>MENGER_MAX_LEVEL||typeof v.digits!=='string'||v.digits.length!==v.level||[...v.digits].some(c=>!MENGER_ALPHABET.includes(c)))return null;
+ if(![v.cell,v.local].every(a=>Array.isArray(a)&&a.length===3)||!v.cell.every(x=>Number.isInteger(x)&&Math.abs(x)<1e5)||!v.local.every(x=>Number.isFinite(x)&&Math.abs(x)<=1))return null;
+ const digits=[...v.digits].map(c=>{const n=MENGER_ALPHABET.indexOf(c);return [Math.floor(n/9)-1,Math.floor(n/3)%3-1,n%3-1];});
+ return {level:v.level,cell:[...v.cell],digits,local:[...v.local]};
+}
+const topScale=()=>world===1?1/1.6:1;
+// March units per world unit: frame units for the Menger sponge, world units elsewhere.
+const viewScale=()=>world===1?topScale()*3**menger.level:1;
+const surfaceDistance=()=>world===1?mengerField(mengerCurrent(),menger.local,ORIGIN):distance(pos);
 function fail(message,title){$('errorTitle').textContent=title||'Something went wrong';$('errorText').textContent=message;$('error').hidden=false;paused=true;}
 function hideError(){$('error').hidden=true;}
 function stripSavedCamera(){try{const raw=localStorage.getItem('foldspace-settings-v1');if(!raw)return;const v=JSON.parse(raw);if(v&&typeof v==='object'){delete v.camera;localStorage.setItem('foldspace-settings-v1',JSON.stringify(v));}}catch{}}
@@ -265,13 +381,13 @@ function resetToStartView(){reset();scale=.7;avgMs=33.3;adjustAt=performance.now
 function gpuAlive(){return gl&&!gl.isContextLost();}
 function resumeRenderer(){if(!gpuAlive()||!activeScene())return false;hideError();paused=false;wake();cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);return true;}
 function reloadPage({clearCamera=false}={}){if(clearCamera)stripSavedCamera();location.reload();}
-function resetGpuState(){scenes.clear();targets=[];blur=post=null;loadStage=0;preciseNoticeWorld=-1;cancelAnimationFrame(raf);raf=0;}
+function resetGpuState(){scenes.clear();targets=[];w=h=0;blur=post=null;loadStage=0;preciseNoticeWorld=-1;cancelAnimationFrame(raf);raf=0;}
 async function reinitializeAfterContextRestore(){resetGpuState();$('loading').hidden=false;$('loadStatus').textContent='Restoring the renderer…';setLoadProgress(0);hideError();paused=false;try{await initializeRenderer();}catch(e){console.error(e);fail(e.message,'We couldn’t restore the renderer.');$('loading').hidden=true;}}
 $('errorResetView').onclick=()=>{stripSavedCamera();resetToStartView();if(!resumeRenderer())reloadPage();};
 $('errorRetry').onclick=()=>reloadPage({clearCamera:true});
 // ?cold adds a random comment so the browser's shader disk cache misses, for testing first-visit loads.
 const cacheBust=/[?&]cold\b/.test(globalThis.location?.search||'')?`\n// ${Math.random()}`:'';
-function sceneSource(i,precise){return $('sceneShader').textContent.replace('precision highp int;',`precision highp int;\nconst int world=${i};\nconst bool preciseMode=${precise};`)+cacheBust;}
+function sceneSource(i,precise){return $('sceneShader').textContent.replace('precision highp int;',`precision highp int;\nconst int world=${i};\nconst bool preciseMode=${precise};\nconst int coneBlock=${CONE_BLOCK};\nconst int mengerSlots=${MENGER_SLOTS};`)+cacheBust;}
 function program(source){const p=gl.createProgram();for(const [type,text] of [[gl.VERTEX_SHADER,$('vertex').textContent],[gl.FRAGMENT_SHADER,source]]){const s=gl.createShader(type);gl.shaderSource(s,text);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));gl.attachShader(p,s);gl.deleteShader(s);}gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return {p,loc:new Map()};}
 async function programAsync(source){
  const p=gl.createProgram(),shaders=[];
@@ -285,28 +401,37 @@ async function programAsync(source){
 // the much heavier deep-zoom variants compile one at a time in the background afterwards.
 const scenes=new Map();
 function sceneEntry(i,precise){const key=i+(precise?'p':'f');let entry=scenes.get(key);if(!entry){entry={program:null};entry.promise=programAsync(sceneSource(i,precise)).then(p=>{entry.program=p;wake();});scenes.set(key,entry);}return entry;}
-const needsPrecise=()=>world!==2&&nearest<.003;
+// The Menger sponge never needs it: its zoom frames keep coordinates near 1.
+const needsPrecise=()=>world!==1&&world!==2&&nearest<.003;
 // Until the deep-zoom program is ready, deep views fall back to the fast one (softer, but never blank).
 function activeScene(){return needsPrecise()&&scenes.get(world+'p')?.program||scenes.get(world+'f')?.program;}
-async function warmPreciseScenes(){for(;;){const i=[world,0,1,3,4].find(j=>j!==2&&!scenes.has(j+'p'));if(i===undefined)return;await sceneEntry(i,true).promise.catch(console.error);}}
+async function warmPreciseScenes(){for(;;){const i=[world,0,3,4].find(j=>j!==1&&j!==2&&!scenes.has(j+'p'));if(i===undefined)return;await sceneEntry(i,true).promise.catch(console.error);}}
 let preciseNoticeWorld=-1;
 function uniform(p,name,type,...values){if(!p.loc.has(name))p.loc.set(name,gl.getUniformLocation(p.p,name));gl['uniform'+type](p.loc.get(name),...values);}
-function target(width,height){const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Unable to allocate render buffers. Try a smaller window.');return {tex,fb,width,height};}
-function resize(){let mode=$('quality').value,s=mode==='auto'?scale:mode==='low'?.45:mode==='high'?.85:1;const dpr=Math.min(devicePixelRatio,mode==='ultra'?2:1.5);let width=Math.max(2,Math.floor(innerWidth*dpr*s)),height=Math.max(2,Math.floor(innerHeight*dpr*s));if(width===w&&height===h)return;w=width;h=height;canvas.width=Math.floor(innerWidth*dpr);canvas.height=Math.floor(innerHeight*dpr);for(const t of targets){gl.deleteTexture(t.tex);gl.deleteFramebuffer(t.fb);}targets=[target(w,h),target(Math.max(2,w>>2),Math.max(2,h>>2)),target(Math.max(2,w>>2),Math.max(2,h>>2))];}
+// Float targets hold the coarse pass's start distance and glow; they are read texel by texel.
+function target(width,height,float=false){const tex=gl.createTexture(),filter=float?gl.NEAREST:gl.LINEAR;gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,float?gl.RG32F:gl.RGBA8,width,height,0,float?gl.RG:gl.RGBA,float?gl.FLOAT:gl.UNSIGNED_BYTE,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Unable to allocate render buffers. Try a smaller window.');return {tex,fb,width,height};}
+function resize(){let mode=$('quality').value,s=mode==='auto'?scale:mode==='low'?.45:mode==='high'?.85:1;const dpr=Math.min(devicePixelRatio,mode==='ultra'?2:1.5);let width=Math.max(2,Math.floor(innerWidth*dpr*s)),height=Math.max(2,Math.floor(innerHeight*dpr*s));if(width===w&&height===h)return;w=width;h=height;canvas.width=Math.floor(innerWidth*dpr);canvas.height=Math.floor(innerHeight*dpr);for(const t of targets){gl.deleteTexture(t.tex);gl.deleteFramebuffer(t.fb);}targets=[target(w,h),target(Math.max(2,w>>2),Math.max(2,h>>2)),target(Math.max(2,w>>2),Math.max(2,h>>2)),...coarseTarget(w,h)];}
+const coarseTarget=(width,height)=>floatTargets?[target(Math.ceil(width/CONE_BLOCK),Math.ceil(height/CONE_BLOCK),true)]:[];
 function bindTarget(t){gl.bindFramebuffer(gl.FRAMEBUFFER,t?t.fb:null);gl.viewport(0,0,t?t.width:canvas.width,t?t.height:canvas.height);}
 function texture(tex,unit=0){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);}
-function precisionFloor(){return world===2?3e-7:2e-12;}
+function precisionFloor(){return world===1?0:world===2?3e-7:2e-12;}
 function renderPass(buffers,output,fullSize,origin=[0,0],highQuality=false){
- const v=worlds[world],b=basis(),depthLevel=+$('detail').value,scene=activeScene();
- bindTarget(buffers[0]);gl.useProgram(scene.p);
+ const v=worlds[world],b=basis(),depthLevel=+$('detail').value,scene=activeScene(),vs=viewScale(),coarse=buffers[3];
+ gl.useProgram(scene.p);
  uniform(scene,'resolution','2fv',fullSize);uniform(scene,'tileOrigin','2fv',origin);
  for(const [name,value] of Object.entries({eye:pos,forward:b.f,right:b.r,up:b.u,colorA:v.a,colorB:v.b,fogColor:v.fog,glowColor:v.glow||[0,0,0]}))uniform(scene,name,'3fv',value);
  uniform(scene,'shadingSamples','1i',4);uniform(scene,'roundMask','1ui',4294967295);uniform(scene,'eyeLow','3fv',pos.map(x=>x-Math.fround(x)));
  uniform(scene,'iterations','1i',Math.min(world===1?22:world===4?48:64,iterations+(highQuality?4:0)));
  uniform(scene,'steps','1i',highQuality?480:Math.min(320,($('quality').value==='low'?90:$('quality').value==='ultra'?240:160)+depthLevel*20));
- uniform(scene,'epsilon','1f',Math.max(precisionFloor(),Math.min(.0007,nearest*.001)/Math.pow(1.8,depthLevel+(highQuality?1:0))));
+ uniform(scene,'epsilon','1f',Math.max(precisionFloor(),Math.min(.0007,nearest*.001)*vs/Math.pow(1.8,depthLevel+(highQuality?1:0))));
  uniform(scene,'detailBias','1f',highQuality?.35:.75/(1+depthLevel*.3));uniform(scene,'fogScale','1f',fogDistance());
- uniform(scene,'period','1f',v.period);uniform(scene,'repeating','1i',$('repeat').checked?1:0);gl.drawArrays(gl.TRIANGLES,0,3);
+ uniform(scene,'lengthScale','1f',world===1?vs*Math.min(1,SHADING_ZOOM*nearest):1);uniform(scene,'invViewScale','1f',1/vs);
+ uniform(scene,'period','1f',v.period);uniform(scene,'repeating','1i',$('repeat').checked?1:0);
+ if(world===1){const f=mengerCurrent();uniform(scene,'frameLocal','3fv',menger.local);uniform(scene,'frameBox','4fv',f.box);uniform(scene,'framePeriod','1f',f.period);uniform(scene,'frameLevels','4fv',f.slots);uniform(scene,'frameLevelCount','1i',f.levels.length);uniform(scene,'frameTrap','1f',f.trap);}
+ // Unbind the coarse texture while it is the render target, so the sampler never reads it back.
+ uniform(scene,'coarseDepth','1i',2);texture(null,2);
+ if(coarse){bindTarget(coarse);uniform(scene,'coarsePass','1i',1);uniform(scene,'useCoarse','1i',0);gl.drawArrays(gl.TRIANGLES,0,3);texture(coarse.tex,2);}
+ bindTarget(buffers[0]);uniform(scene,'coarsePass','1i',0);uniform(scene,'useCoarse','1i',coarse?1:0);gl.drawArrays(gl.TRIANGLES,0,3);
  const radius=Math.max(.5,fullSize[1]/900);
  gl.useProgram(blur.p);uniform(blur,'source','1i',0);bindTarget(buffers[1]);texture(buffers[0].tex);uniform(blur,'extract','1i',1);uniform(blur,'direction','2f',radius/buffers[1].width,0);gl.drawArrays(gl.TRIANGLES,0,3);
  bindTarget(buffers[2]);texture(buffers[1].tex);uniform(blur,'extract','1i',0);uniform(blur,'direction','2f',0,radius/buffers[2].height);gl.drawArrays(gl.TRIANGLES,0,3);
@@ -334,7 +459,7 @@ async function renderImage(){
   if(needsPrecise()){$('renderStatus').textContent='Preparing deep-zoom precision…';await sceneEntry(world,true).promise.catch(console.error);if(renderCancelled)throw Error('cancelled');}
   renderCanvas=document.createElement('canvas');renderCanvas.width=width;renderCanvas.height=height;
   const ctx=renderCanvas.getContext('2d');if(!ctx)throw Error('Unable to allocate the image canvas.');
-  buffers.push(target(size,size));buffers.push(target(size/4,size/4));buffers.push(target(size/4,size/4));output=target(size,size);
+  buffers.push(target(size,size),target(size/4,size/4),target(size/4,size/4),...coarseTarget(size,size));output=target(size,size);
   const pixels=new Uint8Array(size*size*4),tileImage=ctx.createImageData(tile,tile);
   const columns=Math.ceil(width/tile),rows=Math.ceil(height/tile),total=columns*rows,start=performance.now();let done=0;
   for(let row=0;row<rows;row++)for(let column=0;column<columns;column++){
@@ -382,16 +507,20 @@ function move(dt){const b=basis(),boost=keys.has('ShiftLeft')||keys.has('ShiftRi
  // More iterations are evaluated as the camera approaches the fractal surface.
  const cap=world===1?22:world===4?48:64,base=worlds[world].it+(+$('detail').value-1)*3;
  iterations=Math.min(cap,Math.max(3,base));
- const probe=Math.max(precisionFloor()*4,Math.abs(distance(pos))),detail=Math.max(0,Math.log10(1/probe));
- iterations=Math.min(cap,Math.max(3,base+Math.floor(detail*2.5)));
- nearest=Math.max(precisionFloor()*4,Math.abs(distance(pos)));
+ if(world===1)rescaleMenger();
+ // Distances below are in march units (viewScale per world unit); the Menger sponge's frame
+ // levels already cover the zoom, so its iterations only count the levels finer than the frame.
+ const vs=viewScale(),probe=Math.max(precisionFloor()*4,Math.abs(surfaceDistance())),detail=Math.max(0,Math.log10(topScale()/probe));
+ iterations=Math.min(cap,Math.max(3,base+Math.floor(detail*worlds[world].rate)));
+ const near=Math.max(precisionFloor()*4,Math.abs(surfaceDistance()));nearest=near/vs;
  let forward=Number(keys.has('KeyW'))-Number(keys.has('KeyS')),side=Number(keys.has('KeyD'))-Number(keys.has('KeyA')),vertical=Number(keys.has('KeyQ'))-Number(keys.has('KeyE'));
- let dir=b.f.map((x,i)=>x*forward+b.r[i]*side+(i===1?vertical:0));let len=Math.hypot(...dir);if(len>1)dir=dir.map(x=>x/len);let amount=Math.min(worlds[world].period*.18,Math.max(nearest*.8,precisionFloor()*2))*flightSpeed*boost;
- const delta=dir.map((x,i)=>x*amount*dt);let length=Math.hypot(...delta);if(length){const maxStep=Math.max(nearest*.35,precisionFloor()),factor=Math.min(1,maxStep/length);pos=pos.map((x,i)=>x+delta[i]*factor);if($('repeat').checked){const p=worlds[world].period;pos=pos.map((x,i)=>wraps(i)&&Math.abs(x)>p*.5?x-p*Math.floor((x+p*.5)/p):x);}else if(Math.hypot(...pos)>100){pos=norm(pos).map(x=>x*100);tell('Turn on repeating space to keep exploring.');}}
+ let dir=b.f.map((x,i)=>x*forward+b.r[i]*side+(i===1?vertical:0));let len=Math.hypot(...dir);if(len>1)dir=dir.map(x=>x/len);let amount=Math.min(worlds[world].period*.18*vs,Math.max(near*.8,precisionFloor()*2))*flightSpeed*boost;
+ const delta=dir.map((x,i)=>x*amount*dt);let length=Math.hypot(...delta);if(length){const maxStep=Math.max(near*.35,precisionFloor()),factor=Math.min(1,maxStep/length);if(world===1){shiftMenger(delta.map(x=>x*factor));return;}pos=pos.map((x,i)=>x+delta[i]*factor);if($('repeat').checked){const p=worlds[world].period;pos=pos.map((x,i)=>wraps(i)&&Math.abs(x)>p*.5?x-p*Math.floor((x+p*.5)/p):x);}else if(Math.hypot(...pos)>100){pos=norm(pos).map(x=>x*100);tell('Turn on repeating space to keep exploring.');}}
 }
 // Nothing in the scene animates, so an unchanged view never needs another frame.
 let lastView='',loadStage=0;
-function viewKey(){return [...pos,yaw,pitch,world,iterations,nearest,scale,innerWidth,innerHeight,devicePixelRatio,$('quality').value,$('detail').value,$('repeat').checked,fogDistance()].join();}
+// Deep in a Menger frame the world position stops changing, so the frame itself is part of the key.
+function viewKey(){return [...pos,yaw,pitch,world,iterations,nearest,scale,innerWidth,innerHeight,devicePixelRatio,$('quality').value,$('detail').value,$('repeat').checked,fogDistance(),...(world===1?[menger.level,...menger.local]:[])].join();}
 function wake(){lastView='';lastTime=0;lastDraw=0;}
 function finishLoading(){
  // Wait for the GPU so the loader stays up until the first view is really on screen.
@@ -404,8 +533,8 @@ function tick(time){raf=requestAnimationFrame(tick);if(paused||document.hidden){
  if(loadStage===1){loadStage=2;$('loadStatus').textContent='Rendering the first view…';return;}
  const interval=1000/30;if(time-lastDraw<interval-.5)return;const elapsed=lastTime?time-lastTime:interval;lastDraw+=interval*Math.max(1,Math.floor((time-lastDraw+.5)/interval));const dt=Math.min(elapsed/1000,.1);lastTime=time;move(dt);
  const view=viewKey();if(view===lastView){lastTime=0;return;}lastView=view;
- avgMs=avgMs*.94+elapsed*.06;draw();if(loadStage===2)finishLoading();frame++;if(frame%60===0)saveSettings();if(time-adjustAt>1800){if($('quality').value==='auto'){if(avgMs>39)scale=Math.max(world!==2&&nearest<.003?.18:.3,scale*(avgMs>65?.7:.88));else if(avgMs<35)scale=Math.min(1,scale+.025);}adjustAt=time;}if(frame%12===0||frame===1){$('fps').innerHTML=`${Math.round(1000/avgMs)} <small>fps</small>`;$('depth').innerHTML=`${nearest.toExponential(1)}<small> u</small>`;}}
-async function initializeRenderer(){try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance',preserveDrawingBuffer:false});if(!gl)throw Error('WebGL 2 is unavailable. Open this file in a current Chrome, Edge, Firefox or Safari browser with hardware acceleration enabled.');const jobs=[programAsync($('blurShader').textContent),programAsync($('postShader').textContent),...worlds.map((_,i)=>sceneEntry(i,false).promise)];let done=0;jobs.forEach(job=>job.then(()=>setLoadProgress(++done/(jobs.length+1)),()=>{}));[blur,post]=await Promise.all(jobs);gl.bindVertexArray(gl.createVertexArray());loadStage=1;raf=requestAnimationFrame(tick);}catch(e){console.error(e);fail(e.message,'We couldn’t start the renderer.');$('loading').hidden=true;}}
+ avgMs=avgMs*.94+elapsed*.06;draw();if(loadStage===2)finishLoading();frame++;if(frame%60===0)saveSettings();if(time-adjustAt>1800){if($('quality').value==='auto'){if(avgMs>39)scale=Math.max(needsPrecise()?.18:.3,scale*(avgMs>65?.7:.88));else if(avgMs<35)scale=Math.min(1,scale+.025);}adjustAt=time;}if(frame%12===0||frame===1){$('fps').innerHTML=`${Math.round(1000/avgMs)} <small>fps</small>`;$('depth').innerHTML=`${nearest.toExponential(1)}<small> u</small>`;}}
+async function initializeRenderer(){try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance',preserveDrawingBuffer:false});if(!gl)throw Error('WebGL 2 is unavailable. Open this file in a current Chrome, Edge, Firefox or Safari browser with hardware acceleration enabled.');floatTargets=!!gl.getExtension('EXT_color_buffer_float');const jobs=[programAsync($('blurShader').textContent),programAsync($('postShader').textContent),...worlds.map((_,i)=>sceneEntry(i,false).promise)];let done=0;jobs.forEach(job=>job.then(()=>setLoadProgress(++done/(jobs.length+1)),()=>{}));[blur,post]=await Promise.all(jobs);gl.bindVertexArray(gl.createVertexArray());loadStage=1;raf=requestAnimationFrame(tick);}catch(e){console.error(e);fail(e.message,'We couldn’t start the renderer.');$('loading').hidden=true;}}
 window.foldspaceReady=initializeRenderer();
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);fail('The graphics context was lost—often after extreme zoom or heavy GPU load. Reset to the start view or reload the page. Close other graphics-heavy tabs if this keeps happening.','Graphics context lost');});
 canvas.addEventListener('webglcontextrestored',()=>{reinitializeAfterContextRestore();});
@@ -413,8 +542,8 @@ canvas.addEventListener('pointerdown',e=>{if(rendering||e.button!==0)return;canv
 const controls=new Set(['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ShiftLeft','ShiftRight','AltLeft','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Equal','Minus','NumpadAdd','NumpadSubtract']);
 addEventListener('keydown',e=>{if(rendering||$('renderDialog').open||$('guide').open||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(controls.has(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='Equal'||e.code==='NumpadAdd')setSpeed(flightSpeed*1.2);if(e.code==='Minus'||e.code==='NumpadSubtract')setSpeed(flightSpeed/1.2);if(e.repeat)return;if(e.code==='KeyR'){reset();tell('Back at the starting view');}if(e.code==='KeyH')toggleUI();if(e.code==='KeyF')fullscreen();if(e.key==='?')openGuide();});addEventListener('keyup',e=>keys.delete(e.code));function clearInput(){keys.clear();dive=0;release();}addEventListener('blur',clearInput);addEventListener('pagehide',saveSettings);document.addEventListener('visibilitychange',()=>{saveSettings();clearInput();wake();cancelAnimationFrame(raf);if(!document.hidden&&loadStage&&gpuAlive())raf=requestAnimationFrame(tick);});
 document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key)};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>keys.delete(b.dataset.key);b.oncontextmenu=e=>e.preventDefault();});
-function saveSettings(){try{localStorage.setItem('foldspace-settings-v1',JSON.stringify({world,worldRevision:10,speed:flightSpeed,detail:Number($('detail').value),fog:fogDistance(),quality:$('quality').value,repeat:$('repeat').checked,hidden:document.body.classList.contains('minimal'),camera:{pos:[...pos],yaw,pitch}}));}catch{}}
-function restoreSettings(){try{const v=JSON.parse(localStorage.getItem('foldspace-settings-v1')||'null');if(!v||typeof v!=='object')return;if(Number.isInteger(v.world)&&v.world>=0&&v.world<worlds.length)selectWorld(v.world);if(typeof v.speed==='number'&&Number.isFinite(v.speed)){flightSpeed=Math.max(.1,Math.min(10,v.speed));$('speed').value=flightSpeed.toFixed(1);$('speedValue').textContent=flightSpeed.toFixed(1)+'×';}if(Number.isInteger(v.detail)&&v.detail>=0&&v.detail<=4){$('detail').value=String(v.detail);$('detailValue').textContent=['Light','Standard','Deep','Deeper','Maximum'][v.detail];}if(typeof v.fog==='number'&&Number.isFinite(v.fog)){$('fog').value=String(v.fog);showFog();}if(['auto','low','high','ultra'].includes(v.quality))$('quality').value=v.quality;if(typeof v.repeat==='boolean')$('repeat').checked=v.repeat;if((v.world!==3||v.worldRevision===10)&&v.camera&&Array.isArray(v.camera.pos)&&v.camera.pos.length===3&&v.camera.pos.every(x=>typeof x==='number'&&Number.isFinite(x)&&Math.abs(x)<1e5)&&Number.isFinite(v.camera.yaw)&&Number.isFinite(v.camera.pitch)){pos=[...v.camera.pos];yaw=v.camera.yaw;pitch=Math.max(-1.54,Math.min(1.54,v.camera.pitch));}if(v.hidden===true)toggleUI();}catch{}}
+function saveSettings(){try{localStorage.setItem('foldspace-settings-v1',JSON.stringify({world,worldRevision:10,speed:flightSpeed,detail:Number($('detail').value),fog:fogDistance(),quality:$('quality').value,repeat:$('repeat').checked,hidden:document.body.classList.contains('minimal'),camera:{pos:[...pos],yaw,pitch,...(world===1?{menger:serializeMenger()}:{})}}));}catch{}}
+function restoreSettings(){try{const v=JSON.parse(localStorage.getItem('foldspace-settings-v1')||'null');if(!v||typeof v!=='object')return;if(Number.isInteger(v.world)&&v.world>=0&&v.world<worlds.length)selectWorld(v.world);if(typeof v.speed==='number'&&Number.isFinite(v.speed)){flightSpeed=Math.max(.1,Math.min(10,v.speed));$('speed').value=flightSpeed.toFixed(1);$('speedValue').textContent=flightSpeed.toFixed(1)+'×';}if(Number.isInteger(v.detail)&&v.detail>=0&&v.detail<=4){$('detail').value=String(v.detail);$('detailValue').textContent=['Light','Standard','Deep','Deeper','Maximum'][v.detail];}if(typeof v.fog==='number'&&Number.isFinite(v.fog)){$('fog').value=String(v.fog);showFog();}if(['auto','low','high','ultra'].includes(v.quality))$('quality').value=v.quality;if(typeof v.repeat==='boolean')$('repeat').checked=v.repeat;if((v.world!==3||v.worldRevision===10)&&v.camera&&Array.isArray(v.camera.pos)&&v.camera.pos.length===3&&v.camera.pos.every(x=>typeof x==='number'&&Number.isFinite(x)&&Math.abs(x)<1e5)&&Number.isFinite(v.camera.yaw)&&Number.isFinite(v.camera.pitch)){pos=[...v.camera.pos];yaw=v.camera.yaw;pitch=Math.max(-1.54,Math.min(1.54,v.camera.pitch));if(world===1)setMenger(parseMenger(v.camera.menger)||mengerFromWorld(pos));}if(v.hidden===true)toggleUI();}catch{}}
 function toggleUI(){document.body.classList.toggle('minimal');const hidden=document.body.classList.contains('minimal');$('toggleUI').setAttribute('aria-pressed',String(hidden));const label=hidden?'Show interface':'Hide interface';$('toggleUI').setAttribute('aria-label',label);$('toggleUI').title=label+' (H)';saveSettings();}
 function isFullscreenActive(){if(document.fullscreenElement)return true;const slack=Math.max(screen.width,screen.height)*.015;return innerHeight>=screen.height-slack&&innerWidth>=screen.width-slack;}
 function updateFullscreenButton(){const active=isFullscreenActive(),label=active?'Exit fullscreen':'Enter fullscreen';$('fullscreen').setAttribute('aria-label',label);$('fullscreen').title=label+' (F)';$('fullscreen').setAttribute('aria-pressed',String(active));}
@@ -450,7 +579,7 @@ $('precisionCheck').onclick=checkPrecision;
 $('visitDeep').onclick=()=>{if(!deepSample)return;selectWorld(0);pos=[...deepSample.point];yaw=Math.atan2(deepSample.dir[0],deepSample.dir[2]);pitch=Math.asin(deepSample.dir[1]);iterations=48;nearest=Math.max(precisionFloor()*4,Math.abs(distance(pos)));$('guide').close();saveSettings();};
 
 // Expose read-only diagnostics for renderer verification, without a runtime dependency.
-window.foldspaceDiagnostics=()=>({world:worlds[world].name,position:[...pos],yaw,pitch,iterations,nearest,resolution:[w,h],fps:1000/avgMs,glError:gl?gl.getError():null,bufferCount:targets.length});
+window.foldspaceDiagnostics=()=>({world:worlds[world].name,position:[...pos],yaw,pitch,iterations,nearest,zoomLevel:world===1?menger.level:0,resolution:[w,h],fps:1000/avgMs,glError:gl?gl.getError():null,bufferCount:targets.length});
 })();
 </script>
 </body>
