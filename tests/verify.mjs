@@ -35,7 +35,7 @@ const savedSettings=new Map();const localStorage={setItem:(k,v)=>savedSettings.s
 const context={localStorage,document,console,Math,Set,Map,URL,innerWidth:1440,innerHeight:900,devicePixelRatio:1,performance:{now:()=>0},setTimeout:()=>0,clearTimeout(){},requestAnimationFrame(fn){queue=fn;return 1;},cancelAnimationFrame(){},addEventListener:(name,fn)=>events.set(name,fn)};
 context.window=context;
 // Test-only instrumentation; the distributed HTML has no mutable test API.
-const script=html.match(/<script>\s*([\s\S]*?)<\/script>/)[1].replace('// Expose read-only diagnostics', 'window.testAPI={saveSettings,restoreSettings,renderImage,distance,basis,move,reset,selectWorld,draw,tick,getPos:()=>pos,setPos:p=>pos=p,setIterations:n=>iterations=n,mengerFrame,mengerField,setMenger,getMenger:()=>menger};\n// Expose read-only diagnostics');
+const script=html.match(/<script>\s*([\s\S]*?)<\/script>/)[1].replace('// Expose read-only diagnostics', 'window.testAPI={saveSettings,restoreSettings,renderImage,distance,basis,move,reset,selectWorld,draw,tick,getPos:()=>pos,setPos:p=>pos=p,setIterations:n=>iterations=n,mengerFrame,mengerField,setMenger,getMenger:()=>menger,fogDistance,setFogDistance};\n// Expose read-only diagnostics');
 vm.runInNewContext(script,context,{timeout:5000});
 await context.foldspaceReady;
 const api=context.testAPI, diag=context.foldspaceDiagnostics;
@@ -112,7 +112,7 @@ for(let t=2034;t<6034;t+=1000/75)api.tick(t);
 assert.ok(diag().fps>27&&diag().fps<33,'Frame pacing remains near 30 on a 75 Hz display');
 const idleDraws=draws;for(let t=6034;t<7034;t+=1000/60)api.tick(t);assert.equal(draws,idleDraws,'A stationary view is not redrawn');
 press('KeyW');api.tick(7100);release('KeyW');assert.ok(draws>idleDraws,'Movement wakes the renderer');
-element('fog').value='2.4';api.saveSettings();element('fog').value='1';api.restoreSettings();assert.equal(element('fog').value,'2.4','Fog distance persists');element('fog').value='1';
+api.setFogDistance(2.4);api.saveSettings();api.setFogDistance(1);api.restoreSettings();assert.equal(api.fogDistance(),2.4,'Fog distance persists');api.setFogDistance(1);
 assert.ok(!/<script[^>]+src=|<link[^>]+rel=["']stylesheet["'][^>]+href=/i.test(html),'Standalone with no external scripts or styles');
 context.setTimeout=fn=>{queueMicrotask(fn);return 0;};
 const render=api.renderImage();assert.equal(element('renderDialog').open,true);element('cancelRender').onclick();await render;assert.equal(element('renderDialog').open,false,'Cancel closes render dialog');assert.equal(textures,liveTargets,'Cancelled render releases temporary textures');assert.equal(framebuffers,liveTargets,'Cancelled render releases temporary framebuffers');
