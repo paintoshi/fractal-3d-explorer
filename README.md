@@ -74,7 +74,7 @@ Each frame, a **scene shader** draws a full-screen triangle. For every pixel it:
 
 The same distance formulas exist in JavaScript for flight helpers (see below), but **what you see on screen is entirely shader-driven**. High-resolution **Render image** export uses the same GPU path, tiled into padded chunks; the CPU only stitches those tiles into a PNG.
 
-Before the full-resolution march, a **cone pre-pass** marches one ray per 8×8 pixel block and stores how far that block can safely skip ahead; each pixel then starts its own march from there. Additional GPU passes apply **bloom** (two separable blurs) and **FXAA** antialiasing. There is one compiled shader program per world, plus a heavier **deep-zoom** variant for Mandelbox, Blockworld, and Kleinian that uses paired-float arithmetic in the shader for extra precision near surfaces.
+Before the full-resolution march, a **cone pre-pass** marches one ray per 8×8 pixel block and stores how far that block can safely skip ahead; each pixel then starts its own march from there. Additional GPU passes apply **bloom** (two separable blurs) and **FXAA** antialiasing. There is one compiled shader program per world, plus a heavier **deep-zoom** variant for Mandelbox, Mandelbulb, Blockworld, and Kleinian that uses paired-float arithmetic in the shader for extra precision near surfaces.
 
 **Automatic** quality scales internal resolution toward ~30 fps. **Performance**, **High detail**, and **Ultra** fix that tradeoff manually. Frame rate depends on your GPU, the world, fractal depth, and how close you are to geometry. Rendering pauses while the page is hidden or the controls guide is open.
 
@@ -94,7 +94,7 @@ So: **visuals and export = GPU**; **controls, UI, and conservative flight math =
 
 The **Menger sponge** zooms roughly 600 levels deep (about 10⁻²⁸⁶ of its size) without losing precision. As you approach a surface, the camera steps into the next sub-cube and its coordinates are rescaled by 3, so the shader always works at a comfortable scale. The outer levels you have passed are remembered as exact integer offsets and are restored when you fly back out. The fractal depth grows by one iteration for each threefold zoom, and your exact position at any depth is saved between visits.
 
-Near surfaces, Mandelbox, Blockworld, and Kleinian use paired-float arithmetic for greater coordinate precision. Camera coordinates are split into high and low components, and nearby ray positions are calculated relative to the camera. Mandelbulb uses standard floating-point arithmetic.
+Near surfaces, Mandelbox, Mandelbulb, Blockworld, and Kleinian use paired-float arithmetic for greater coordinate precision. Camera coordinates are split into high and low components, and nearby ray positions are calculated relative to the camera. Mandelbulb evaluates its spherical power-8 map through algebraic angle doubling to preserve that precision.
 
 Extended precision allows finer detail at the cost of additional GPU work. Outside the Menger sponge, magnification remains limited by numerical precision and finite fractal iterations; repeating space extends travel rather than providing unlimited unique detail. The surface-distance readout estimates your proximity to the geometry.
 
@@ -113,6 +113,7 @@ A technical guide for AI assistants and future contributors: how the code is org
 
 - **`index.html`** — the whole application: CSS, markup, four GLSL shaders, and one JavaScript IIFE. There is no build step, bundler, or package manager, and no runtime dependencies. Keep it that way: the app must work when opened directly from disk and offline.
 - **`tests/verify.mjs`** — a Node test (`node tests/verify.mjs`) that runs the real page script inside `vm` with a mocked DOM and a mocked WebGL context. It covers logic, not pixels.
+- **`tests/gpu-precision.mjs`** — run with Node, then open the printed localhost URL in a WebGL 2 browser. Compiles the full precise Mandelbulb shader and compares GPU distances against spherical float64 references down to 1e-10, including camera-relative offsets, repeated cells, and polar axes. Reports pass/fail to the terminal.
 - **`serve.py`** — a minimal local preview server with an explicit allow-list of files (it never lists directories).
 - Icons, `site.webmanifest`, `CNAME` (GitHub Pages domain) — static assets.
 
@@ -166,7 +167,7 @@ A technical guide for AI assistants and future contributors: how the code is org
 |---|---|---|---|---|---|
 | 0 | Mandelbox | Box fold, sphere fold, scale −1.8 | 64 | yes | 3 |
 | 1 | Menger sponge | Inigo Quilez's cross subtraction, in zoom frames | 22 (fine levels only) | not needed | 1/log10 3 |
-| 2 | Mandelbulb | Power 8, spherical coordinates | 64 | no | 2.5 |
+| 2 | Mandelbulb | Power 8, spherical coordinates | 64 | yes | 2.5 |
 | 3 | Blockworld | Mandelbox with a max-norm (cube) inversion, scale −2.5; repeats in x and z only | 64 | yes | 2.5 |
 | 4 | Kleinian tunnels | Box fold plus inversion, cylindrical distance | 48 | yes | 2.5 |
 
@@ -177,7 +178,7 @@ Every formula exists twice: in GLSL (`fastField` / `preciseField` / `mengerField
 ### Adaptive detail
 
 - `iterations = base + floor(log10(topScale / surfaceDistance) · rate)`, clamped to the world's cap. `base` is `it` plus 3 per **Fractal depth** step above Standard.
-- `epsilon` (hit threshold) shrinks with `nearest` and with Fractal depth. It is floored by `precisionFloor()`: 2e-12 for precise worlds, 3e-7 for Mandelbulb, 0 for the Menger sponge.
+- `epsilon` (hit threshold) shrinks with `nearest` and with Fractal depth. It is floored by `precisionFloor()`: 2e-12 for all precise worlds (including Mandelbulb), 0 for the Menger sponge.
 - Steps per ray: 90 / 160 / 240 for Performance / default / Ultra, +20 per depth step, capped at 320. Export uses 480.
 - `detailBias` widens the hit threshold with distance (`t·detailBias/resolution.y`), a cheap level of detail.
 
@@ -189,10 +190,11 @@ Every formula exists twice: in GLSL (`fastField` / `preciseField` / `mengerField
 - The coarse texture is unbound from texture unit 2 while it is the render target, to avoid a WebGL feedback-loop error. Keep that order in `renderPass`.
 - Measured gain: about 12–25% less GPU time per frame, depending on the world.
 
-### Paired-float precision (Mandelbox, Blockworld, Kleinian)
+### Paired-float precision (Mandelbox, Mandelbulb, Blockworld, Kleinian)
 
 - `preciseField` represents each coordinate as a float pair (high + low), using error-free sums (`da`) and Dekker products (`dm`), plus division, square root, floor, and mod built from them.
-- The camera is sent as `eye` + `eyeLow` (the part lost by `Math.fround`), and ray offsets are added relative to it.
+- The camera is sent as `eye` + `eyeLow` (the part lost by `Math.fround`), and ray offsets are added relative to it. Repetition uses `period` + `periodLow` so Mandelbulb's non-integer period stays aligned with the CPU.
+- Mandelbulb's `bulbPower8` squares the polar and azimuth complex pairs three times, reproducing the spherical power-8 formula without float32 trigonometry. Its float64 CPU mirror retains the equivalent trigonometric formula.
 - `roundMask` is always all ones at runtime. Because it is a uniform, the driver cannot prove that `rounded(x) == x`, which stops it from algebraically simplifying the error-free sums away.
 - `needsPrecise()` switches to it when `nearest < 0.003`. `checkPrecision()` (in the controls guide) compares the GPU's precise distances with CPU float64 at a deep Mandelbox point.
 - Depth is still limited: roughly 1e-12 world units, and iteration caps limit detail before that.
@@ -256,6 +258,5 @@ The Menger sponge is exactly self-similar under 3× scaling, so its camera is no
 - **Temporal reprojection** while moving, reusing the previous frame's depth to start rays or to upscale a lower internal resolution.
 - **Hierarchical cone passes** (for example 32 px, then 8 px blocks) to skip more empty space in open views, plus an `RGBA8`-packed fallback for devices without `EXT_color_buffer_float`.
 - **Shareable links** that encode the camera (including the Menger digits) in the URL.
-- **Mandelbulb precision.** It has no precise variant; its trigonometry makes paired-float arithmetic expensive, but a polynomial (triplex) formulation would make it feasible.
 - **WebGPU.** It would not increase zoom depth (still 32-bit floats), but compute shaders could make tiled export, progressive accumulation, and the cone pass simpler and faster. Keep WebGL 2 as the fallback.
 - **Maintainability.** If the file keeps growing, the shaders could move into separate files inlined by a tiny build step, as long as the shipped result stays one self-contained HTML file.

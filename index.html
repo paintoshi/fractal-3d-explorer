@@ -59,7 +59,7 @@ uniform vec3 eye,eyeLow,forward,right,up,colorA,colorB,fogColor,glowColor;
 // compile only contains one formula; the full combined shader took over a minute on D3D.
 uniform highp uint roundMask;
 uniform int iterations,steps,shadingSamples;
-uniform float epsilon,period,detailBias,fogScale;
+uniform float epsilon,period,periodLow,detailBias,fogScale;
 uniform bool repeating;
 // lengthScale converts world-unit shading lengths into march units; invViewScale maps back.
 uniform float lengthScale,invViewScale;
@@ -104,7 +104,7 @@ bool lessd(vec2 a,vec2 b){return a.x<b.x||(a.x==b.x&&a.y<b.y);}
 vec2 maxd(vec2 a,vec2 b){return lessd(a,b)?b:a;}
 vec2 dsqrt(vec2 a){float q=sqrt(max(a.x,0.));if(q<1e-30)return ds(0.);return da(ds(q),ds(val(subd(a,dm(ds(q),ds(q))))/(2.*q)));}
 float dfloor(vec2 a){float n=floor(a.x);return n+floor((a.x-n)+a.y);}
-vec2 dmod(vec2 a,float period){return subd(a,dm(ds(period),ds(dfloor(dv(a,ds(period))))));}
+vec2 dmod(vec2 a,vec2 period){return subd(a,dm(period,ds(dfloor(dv(a,period)))));}
 vec2 fold(vec2 a){if(a.x>1.||(a.x==1.&&a.y>0.))return subd(ds(2.),a);if(a.x< -1.||(a.x== -1.&&a.y<0.))return subd(ds(-2.),a);return a;}
 struct D3{vec2 x;vec2 y;vec2 z;};
 D3 from3(vec3 p){return D3(ds(p.x),ds(p.y),ds(p.z));}
@@ -113,17 +113,33 @@ D3 mul3(D3 a,vec2 k){return D3(dm(a.x,k),dm(a.y,k),dm(a.z,k));}
 vec2 dot3(D3 a){return da(da(dm(a.x,a.x),dm(a.y,a.y)),dm(a.z,a.z));}
 float len3(D3 a){return val(dsqrt(dot3(a)));}
 D3 fold3(D3 a){return D3(fold(a.x),fold(a.y),fold(a.z));}
-D3 mod3(D3 a,float period){return D3(dmod(a.x,period),dmod(a.y,period),dmod(a.z,period));}
+D3 mod3(D3 a,vec2 period){return D3(dmod(a.x,period),dmod(a.y,period),dmod(a.z,period));}
 D3 abs3(D3 a){return D3(dab(a.x),dab(a.y),dab(a.z));}
 vec3 value3(D3 a){return vec3(val(a.x),val(a.y),val(a.z));}
+// (z + i*length(xy))^8 supplies r^8*cos(8*theta) and r^8*sin(8*theta).
+// Squaring the unit azimuth three times supplies cos/sin(8*phi), without
+// single-precision trigonometry discarding the low bits of the orbit.
+D3 bulbPower8(D3 z){
+ vec2 rho=dsqrt(da(dm(z.x,z.x),dm(z.y,z.y)));
+ vec2 polarC=z.z,polarS=rho,azimuthC=ds(1.),azimuthS=ds(0.);
+ if(val(rho)>0.){azimuthC=dv(z.x,rho);azimuthS=dv(z.y,rho);}
+ for(int j=0;j<3;j++){
+  vec2 c=subd(dm(polarC,polarC),dm(polarS,polarS));polarS=dm(ds(2.),dm(polarC,polarS));polarC=c;
+  c=subd(dm(azimuthC,azimuthC),dm(azimuthS,azimuthS));azimuthS=dm(ds(2.),dm(azimuthC,azimuthS));azimuthC=c;
+ }
+ return D3(dm(polarS,azimuthC),dm(polarS,azimuthS),polarC);
+}
 // Orbit traps only color the surface, so single precision is enough for them.
 float sq(vec3 a){return dot(a,a);}
 vec2 preciseField(vec3 offset){
  D3 p=add3(D3(vec2(eye.x,eyeLow.x),vec2(eye.y,eyeLow.y),vec2(eye.z,eyeLow.z)),from3(offset));
- if(repeating){D3 q=add3(mod3(add3(p,from3(vec3(period*.5))),period),from3(vec3(-period*.5)));if(world==3)q.y=p.y;p=q;}
+ if(repeating){vec2 span=vec2(period,periodLow),halfSpan=dm(span,ds(.5));D3 halfCell=D3(halfSpan,halfSpan,halfSpan);D3 q=add3(mod3(add3(p,halfCell),span),mul3(halfCell,ds(-1.)));if(world==3)q.y=p.y;p=q;}
  D3 z=p;float dr=1.,trap=1e5,d=0.;
  if(world==0){
   for(int i=0;i<min(iterations,64);i++){z=fold3(z);vec2 r2=dot3(z);vec2 k=lessd(r2,ds(.25))?ds(4.):lessd(ds(1.),r2)?ds(1.):dv(ds(1.),r2);z=mul3(z,k);dr*=val(k);z=add3(mul3(z,vec2(-1.8,-4.7683715864721421e-08)),p);dr=dr*1.8+1.;trap=min(trap,sq(value3(z)));if(dr>1e26)break;}d=len3(z)/dr;trap=sqrt(trap);
+ }else if(world==2){
+  for(int i=0;i<min(iterations,64);i++){float r=len3(z);trap=min(trap,r);if(r>3.)break;if(r<1e-8){z=p;continue;}float r2=r*r,r4=r2*r2,r7=r4*r2*r;dr=r7*8.*dr+1.;z=add3(bulbPower8(z),p);}
+  float r=len3(z);d=.5*log(max(r,1.00001))*r/dr;
  }else if(world==3){
   for(int i=0;i<min(iterations,64);i++){z=fold3(z);D3 a=abs3(z);vec2 r=maxd(a.x,maxd(a.y,a.z));vec2 r2=dm(r,r);vec2 k=lessd(r2,ds(.25))?ds(4.):lessd(r2,ds(1.))?dv(ds(1.),r2):ds(1.);z=add3(mul3(z,dm(k,ds(-2.5))),p);dr=dr*val(k)*2.5+1.;trap=min(trap,val(r));if(dr>1e26)break;}
   D3 a=abs3(z);d=val(maxd(a.x,maxd(a.y,a.z)))/dr;
@@ -313,6 +329,7 @@ function setFogDistance(d){$('fog').value=String(fogDistanceToSlider(d));showFog
 function distance(pp){const v=worlds[world],period=v.period;let p=pp.map((x,i)=>wraps(i)?((x+period*.5)%period+period)%period-period*.5:x),z=[...p],dr=1,d=0,its=iterations;
  if(world===0){for(let i=0;i<its;i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);let k=Math.max(1,Math.min(4,1/Math.max(z.reduce((a,x)=>a+x*x,0),1e-9)));z=z.map((x,j)=>x*k*-1.8+p[j]);dr=dr*k*1.8+1;if(dr>1e26)break;}return Math.hypot(...z)/dr;}
  if(world===1){const state=mengerFromWorld(pp);return mengerField(mengerFrame(state),state.local,ORIGIN)*1.6;}
+ // Float64 trigonometry mirrors bulbPower8's algebraic form of the same spherical power.
  if(world===2){for(let i=0;i<its;i++){let r=Math.hypot(...z);if(r>3)break;if(r<1e-8){z=[...p];continue;}let theta=Math.acos(Math.max(-1,Math.min(1,z[2]/r)))*8,phi=Math.atan2(z[1],z[0])*8,r7=r**7;dr=r7*8*dr+1;z=[Math.sin(theta)*Math.cos(phi),Math.sin(theta)*Math.sin(phi),Math.cos(theta)].map((x,j)=>x*r7*r+p[j]);}let r=Math.hypot(...z);return .5*Math.log(Math.max(r,1.00001))*r/dr;}
  if(world===3){for(let i=0;i<its;i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);const r=Math.max(...z.map(Math.abs)),rr=r*r,k=rr<.25?4:rr<1?1/rr:1;z=z.map((x,j)=>x*k*-2.5+p[j]);dr=dr*k*2.5+1;if(dr>1e26)break;}return Math.max(...z.map(Math.abs))/dr;}
  for(let i=0;i<Math.min(its,48);i++){z=z.map(x=>Math.max(-1,Math.min(1,x))*2-x);let k=Math.max(1.2/Math.max(z.reduce((a,x)=>a+x*x,0),1e-12),1);z=z.map(x=>x*k);dr*=k;if(dr>1e26)break;}return .3*Math.abs(Math.min(Math.hypot(z[0],z[1]),Math.hypot(z[1],z[2]),Math.hypot(z[0],z[2]))-.22)/dr;
@@ -418,10 +435,10 @@ async function programAsync(source){
 const scenes=new Map();
 function sceneEntry(i,precise){const key=i+(precise?'p':'f');let entry=scenes.get(key);if(!entry){entry={program:null};entry.promise=programAsync(sceneSource(i,precise)).then(p=>{entry.program=p;wake();});scenes.set(key,entry);}return entry;}
 // The Menger sponge never needs it: its zoom frames keep coordinates near 1.
-const needsPrecise=()=>world!==1&&world!==2&&nearest<.003;
+const needsPrecise=()=>world!==1&&nearest<.003;
 // Until the deep-zoom program is ready, deep views fall back to the fast one (softer, but never blank).
 function activeScene(){return needsPrecise()&&scenes.get(world+'p')?.program||scenes.get(world+'f')?.program;}
-async function warmPreciseScenes(){for(;;){const i=[world,0,3,4].find(j=>j!==1&&j!==2&&!scenes.has(j+'p'));if(i===undefined)return;await sceneEntry(i,true).promise.catch(console.error);}}
+async function warmPreciseScenes(){for(;;){const i=[world,0,3,4,2].find(j=>j!==1&&!scenes.has(j+'p'));if(i===undefined)return;await sceneEntry(i,true).promise.catch(console.error);}}
 let preciseNoticeWorld=-1;
 function uniform(p,name,type,...values){if(!p.loc.has(name))p.loc.set(name,gl.getUniformLocation(p.p,name));gl['uniform'+type](p.loc.get(name),...values);}
 // Float targets hold the coarse pass's start distance and glow; they are read texel by texel.
@@ -430,7 +447,7 @@ function resize(){let mode=$('quality').value,s=mode==='auto'?scale:mode==='low'
 const coarseTarget=(width,height)=>floatTargets?[target(Math.ceil(width/CONE_BLOCK),Math.ceil(height/CONE_BLOCK),true)]:[];
 function bindTarget(t){gl.bindFramebuffer(gl.FRAMEBUFFER,t?t.fb:null);gl.viewport(0,0,t?t.width:canvas.width,t?t.height:canvas.height);}
 function texture(tex,unit=0){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);}
-function precisionFloor(){return world===1?0:world===2?3e-7:2e-12;}
+function precisionFloor(){return world===1?0:2e-12;}
 function renderPass(buffers,output,fullSize,origin=[0,0],highQuality=false){
  const v=worlds[world],b=basis(),depthLevel=+$('detail').value,scene=activeScene(),vs=viewScale(),coarse=buffers[3];
  gl.useProgram(scene.p);
@@ -442,7 +459,7 @@ function renderPass(buffers,output,fullSize,origin=[0,0],highQuality=false){
  uniform(scene,'epsilon','1f',Math.max(precisionFloor(),Math.min(.0007,nearest*.001)*vs/Math.pow(1.8,depthLevel+(highQuality?1:0))));
  uniform(scene,'detailBias','1f',highQuality?.35:.75/(1+depthLevel*.3));uniform(scene,'fogScale','1f',fogDistance());
  uniform(scene,'lengthScale','1f',world===1?vs*Math.min(1,SHADING_ZOOM*nearest):1);uniform(scene,'invViewScale','1f',1/vs);
- uniform(scene,'period','1f',v.period);uniform(scene,'repeating','1i',$('repeat').checked?1:0);
+ uniform(scene,'period','1f',v.period);uniform(scene,'periodLow','1f',v.period-Math.fround(v.period));uniform(scene,'repeating','1i',$('repeat').checked?1:0);
  if(world===1){const f=mengerCurrent();uniform(scene,'frameLocal','3fv',menger.local);uniform(scene,'frameBox','4fv',f.box);uniform(scene,'framePeriod','1f',f.period);uniform(scene,'frameLevels','4fv',f.slots);uniform(scene,'frameLevelCount','1i',f.levels.length);uniform(scene,'frameTrap','1f',f.trap);}
  // Unbind the coarse texture while it is the render target, so the sampler never reads it back.
  uniform(scene,'coarseDepth','1i',2);texture(null,2);

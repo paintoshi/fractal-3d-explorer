@@ -30,12 +30,12 @@ const gl = new Proxy({
   isContextLost(){return false;},getError(){return 0;},drawArrays(){draws++;}
 }, {get(target,key){return key in target?target[key]:key===key.toUpperCase()?0:()=>({});}});
 element('view').getContext=()=>gl;
-const document={getElementById:element,createElement:()=>new Element(),documentElement:new Element(),body:new Element(),hidden:false,querySelectorAll:s=>s==='.world'?element('worlds').children:[],addEventListener:(name,fn)=>events.set('document:'+name,fn)};
+const document={getElementById:element,createElement:()=>new Element(),documentElement:new Element(),body:new Element(),hidden:false,querySelector:()=>new Element(),querySelectorAll:s=>s==='.world'?element('worlds').children:[],addEventListener:(name,fn)=>events.set('document:'+name,fn)};
 const savedSettings=new Map();const localStorage={setItem:(k,v)=>savedSettings.set(k,v),getItem:k=>savedSettings.get(k)||null};
-const context={localStorage,document,console,Math,Set,Map,URL,innerWidth:1440,innerHeight:900,devicePixelRatio:1,performance:{now:()=>0},setTimeout:()=>0,clearTimeout(){},requestAnimationFrame(fn){queue=fn;return 1;},cancelAnimationFrame(){},addEventListener:(name,fn)=>events.set(name,fn)};
+const context={localStorage,document,console,Math,Set,Map,URL,matchMedia:()=>({matches:false}),scrollTo(){},innerWidth:1440,innerHeight:900,devicePixelRatio:1,performance:{now:()=>0},setTimeout:()=>0,clearTimeout(){},requestAnimationFrame(fn){queue=fn;return 1;},cancelAnimationFrame(){},addEventListener:(name,fn)=>events.set(name,fn)};
 context.window=context;
 // Test-only instrumentation; the distributed HTML has no mutable test API.
-const script=html.match(/<script>\s*([\s\S]*?)<\/script>/)[1].replace('// Expose read-only diagnostics', 'window.testAPI={saveSettings,restoreSettings,renderImage,distance,basis,move,reset,selectWorld,draw,tick,getPos:()=>pos,setPos:p=>pos=p,setIterations:n=>iterations=n,mengerFrame,mengerField,setMenger,getMenger:()=>menger,fogDistance,setFogDistance};\n// Expose read-only diagnostics');
+const script=html.match(/<script>\s*([\s\S]*?)<\/script>/)[1].replace('// Expose read-only diagnostics', 'window.testAPI={saveSettings,restoreSettings,renderImage,distance,basis,move,reset,selectWorld,draw,tick,getPos:()=>pos,setPos:p=>pos=p,setIterations:n=>iterations=n,mengerFrame,mengerField,setMenger,getMenger:()=>menger,fogDistance,setFogDistance,needsPrecise,precisionFloor,warmPreciseScenes,activeScene,scenes};\n// Expose read-only diagnostics');
 vm.runInNewContext(script,context,{timeout:5000});
 await context.foldspaceReady;
 const api=context.testAPI, diag=context.foldspaceDiagnostics;
@@ -67,6 +67,14 @@ for(let i=0;i<5;i++){
   api.draw();assert.equal(textures,liveTargets);assert.equal(framebuffers,liveTargets);
   console.log(`${start.world}: ${hits}/81 sample rays hit geometry; sustained flight remains finite`);
 }
+// Mandelbulb must retain movement and detail below its old float32 floor.
+api.selectWorld(2);api.move(.033);assert.equal(api.needsPrecise(),false);
+press('KeyW');for(let i=0;i<10000&&diag().nearest>1e-8;i++)api.move(.033);release('KeyW');
+assert.ok(diag().nearest<1e-8,'Mandelbulb can approach below the old 1.2e-6 movement floor');
+assert.equal(api.precisionFloor(),2e-12,'Mandelbulb shares the extended-precision detail floor');
+assert.equal(api.needsPrecise(),true,'Deep Mandelbulb views request the precise shader');
+await api.warmPreciseScenes();
+assert.equal(api.activeScene(),api.scenes.get('2p').program,'Deep Mandelbulb uses its warmed precise program');
 // Adaptive depth must stay stable while stationary, without iteration feedback.
 api.selectWorld(3);
 for(const level of ['0','1','2','3','4']){
@@ -112,7 +120,7 @@ for(let t=2034;t<6034;t+=1000/75)api.tick(t);
 assert.ok(diag().fps>27&&diag().fps<33,'Frame pacing remains near 30 on a 75 Hz display');
 const idleDraws=draws;for(let t=6034;t<7034;t+=1000/60)api.tick(t);assert.equal(draws,idleDraws,'A stationary view is not redrawn');
 press('KeyW');api.tick(7100);release('KeyW');assert.ok(draws>idleDraws,'Movement wakes the renderer');
-api.setFogDistance(2.4);api.saveSettings();api.setFogDistance(1);api.restoreSettings();assert.equal(api.fogDistance(),2.4,'Fog distance persists');api.setFogDistance(1);
+api.setFogDistance(2.4);api.saveSettings();api.setFogDistance(1);api.restoreSettings();assert.ok(Math.abs(api.fogDistance()-2.4)<1e-12,'Fog distance persists');api.setFogDistance(1);
 assert.ok(!/<script[^>]+src=|<link[^>]+rel=["']stylesheet["'][^>]+href=/i.test(html),'Standalone with no external scripts or styles');
 context.setTimeout=fn=>{queueMicrotask(fn);return 0;};
 const render=api.renderImage();assert.equal(element('renderDialog').open,true);element('cancelRender').onclick();await render;assert.equal(element('renderDialog').open,false,'Cancel closes render dialog');assert.equal(textures,liveTargets,'Cancelled render releases temporary textures');assert.equal(framebuffers,liveTargets,'Cancelled render releases temporary framebuffers');
